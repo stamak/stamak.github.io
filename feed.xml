@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.2">Jekyll</generator><link href="https://stamak.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://stamak.github.io/" rel="alternate" type="text/html" /><updated>2023-04-29T13:32:40+03:00</updated><id>https://stamak.github.io/feed.xml</id><title type="html">DevOps Notes</title><subtitle>This is DevOps notes, helpful notes about DevOps stuff such as Clouds(AWS, GCP), Infrastructure as Code (IaC), Kubernetes</subtitle><author><name>Stanislav Makar</name></author><entry><title type="html">AWS ALB Ingress Advanced Request Routing</title><link href="https://stamak.github.io/2023/04/28/alb-ingress-advanced-routing.html" rel="alternate" type="text/html" title="AWS ALB Ingress Advanced Request Routing" /><published>2023-04-28T20:40:28+03:00</published><updated>2023-04-28T20:40:28+03:00</updated><id>https://stamak.github.io/2023/04/28/alb-ingress-advanced-routing</id><content type="html" xml:base="https://stamak.github.io/2023/04/28/alb-ingress-advanced-routing.html"><![CDATA[<p>AWS Application Load Balancer allows traffic to be routed based on HTTP header, HTTP request method,
+query string, source IP, in addition host and path-based routing.</p>
+
+<p>As it turns out, configuring a <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">k8s ingress</a> can be a bit tricky, as the
+<a href="https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.5/guide/ingress/annotations/#traffic-routing">Official documentations</a> does not provide good examples.
+In my example, I will show how to route requests with the host header “my-host.example.com” and
+the HTTP header “X-Custom-Header: CustomHeaderValue” to the Kubernetes service “my-srv” on port 8080.</p>
+
+<h2 id="prepare-ingress-k8s-manifest">Prepare ingress k8s manifest</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-srv-custom-header
+  annotations:
+    alb.ingress.kubernetes.io/conditions.header-based: |
+      <span class="o">[{</span><span class="s2">"field"</span>:<span class="s2">"http-header"</span>,<span class="s2">"httpHeaderConfig"</span>:<span class="o">{</span><span class="s2">"httpHeaderName"</span>: <span class="s2">"X-Custom-Header"</span>, <span class="s2">"values"</span>:[<span class="s2">"CustomHeaderValue"</span><span class="o">]}}]</span>
+    alb.ingress.kubernetes.io/actions.header-based: |
+      <span class="o">{</span><span class="s2">"type"</span>:<span class="s2">"forward"</span>,<span class="s2">"forwardConfig"</span>:<span class="o">{</span><span class="s2">"targetGroups"</span>:[<span class="o">{</span><span class="s2">"serviceName"</span>:<span class="s2">"my-srv"</span>,<span class="s2">"servicePort"</span>:8080<span class="o">}]}}</span>
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:1111111111:certificate/528f4790-1d24-xxxx-xxxx-a8f493a3c948
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - host: <span class="s2">"my-host.example.com"</span>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: header-based
+                port:
+                  name: use-annotation</code></pre></figure>
+
+<h2 id="verification">Verification</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nv">$ </span>curl <span class="nt">-H</span> <span class="s1">'X-Custom-Header: CustomHeaderValue'</span> https://my-host.example.com/healthcheck
+OK
+
+<span class="c"># no header</span>
+<span class="nv">$ </span>curl https://my-host.example.com/healthcheck
+Backend service does not exists</code></pre></figure>]]></content><author><name>Stanislav Makar</name></author><category term="aws" /><category term="k8s" /><category term="eks" /><category term="ingress" /><category term="alb" /><summary type="html"><![CDATA[AWS Application Load Balancer allows traffic to be routed based on HTTP header, HTTP request method, query string, source IP, in addition host and path-based routing.]]></summary></entry><entry><title type="html">RDS access via kubernetes as jump host</title><link href="https://stamak.github.io/2023/04/26/rds-access.html" rel="alternate" type="text/html" title="RDS access via kubernetes as jump host" /><published>2023-04-26T23:40:28+03:00</published><updated>2023-04-26T23:40:28+03:00</updated><id>https://stamak.github.io/2023/04/26/rds-access</id><content type="html" xml:base="https://stamak.github.io/2023/04/26/rds-access.html"><![CDATA[<p>Sometimes there is a need to connect to RDS in private VPC subnet having an access to EKS.
+It can be achieved with help of <code class="language-plaintext highlighter-rouge">socket</code> container deployed on top of k8s and setting up the tunnel with
+help of <code class="language-plaintext highlighter-rouge">kubectl port-forward</code></p>
+
+<h2 id="deploy-socat-pod">Deploy socat pod</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: rds-postgres-relay
+  name: rds-postgres-relay
+spec:
+  containers:
+    - name: rds-socat
+      image: alpine/socat:latest
+      args:
+        - <span class="s2">"TCP-LISTEN:5432,fork"</span>
+        - <span class="s2">"TCP:private-rds.c1xfw13.eu-central-1.rds.amazonaws.com:5432"</span>
+      ports:
+        - containerPort: 5432
+          name: postgres
+          protocol: TCP</code></pre></figure>
+
+<h2 id="set-up-tunnel">Set up tunnel:</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">kubectl port-forward pod/rds-postgres-relay 45432:5432
+Forwarding from 127.0.0.1:45432 -&gt; 5432
+Forwarding from <span class="o">[</span>::1]:45432 -&gt; 5432
+Handling connection <span class="k">for </span>45432</code></pre></figure>
+
+<h2 id="configure-pgadmin-to-use-12700145432">Configure pgAdmin to use 127.0.0.1:45432</h2>
+
+<p><img src="/assets/pgAdmin4_connection_config.png" alt="pgAdmin4" /></p>]]></content><author><name>Stanislav Makar</name></author><category term="aws" /><category term="k8s" /><category term="eks" /><category term="jump host" /><category term="socat" /><summary type="html"><![CDATA[Sometimes there is a need to connect to RDS in private VPC subnet having an access to EKS. It can be achieved with help of socket container deployed on top of k8s and setting up the tunnel with help of kubectl port-forward]]></summary></entry><entry><title type="html">ALB Ingress Controller and Cost Optimization</title><link href="https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost.html" rel="alternate" type="text/html" title="ALB Ingress Controller and Cost Optimization" /><published>2023-04-16T23:40:28+03:00</published><updated>2023-04-16T23:40:28+03:00</updated><id>https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost</id><content type="html" xml:base="https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost.html"><![CDATA[<p>As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly,
+roughly one ALB costs ~$24 + extra per GB of processed data monthly.</p>
+
+<p>In order to save money there is a possibility to have use <code class="language-plaintext highlighter-rouge">One</code> ALB for all your k8s ingress resources.
+To acheave it one extra annotations should be added to all your ingress resources should have common annotaion:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">  annotations:
+    alb.ingress.kubernetes.io/group.name: shared-ingress</code></pre></figure>
+
+<p>Output for all ingress resources:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nv">$ </span>kubectl get ing <span class="nt">-A</span>
+NAMESPACE     NAME          CLASS  HOSTS                             ADDRESS                                                    PORTS    AGE
+default     ingress-1        alb    ingress-1.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h
+namespace2  ingress-2        alb    ingress-2.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h
+ns3         ingress-3        alb    ingress-3.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h</code></pre></figure>
+
+<p>For more details visit <a href="https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/ingress/annotations/#group.name">official docs</a>.</p>]]></content><author><name>Stanislav Makar</name></author><category term="aws" /><category term="alb" /><category term="k8s" /><category term="ingress" /><category term="aws" /><category term="k8s" /><category term="alb" /><summary type="html"><![CDATA[As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly, roughly one ALB costs ~$24 + extra per GB of processed data monthly.]]></summary></entry></feed>
