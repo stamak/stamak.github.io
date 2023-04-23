@@ -1,0 +1,588 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Taming the Edge with Kubernetes - DevOps Notes</title>
+<meta name="description" content="Unleash the power of containerization at the edge with K3s!">
+
+
+  <meta name="author" content="Stanislav Makar">
+  
+  <meta property="article:author" content="Stanislav Makar">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="DevOps Notes">
+<meta property="og:title" content="Taming the Edge with Kubernetes">
+<meta property="og:url" content="https://stamak.github.io/2024/04/30/k3s.html">
+
+
+  <meta property="og:description" content="Unleash the power of containerization at the edge with K3s!">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2024-04-30T17:37:35+03:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://stamak.github.io/2024/04/30/k3s.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://stamak.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="DevOps Notes Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          DevOps Notes
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/bio-photo.png" alt="Stanislav Makar" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Stanislav Makar</h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Lviv, Ukraine</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="https://github.com/stamak" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/stanislav-makar" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Taming the Edge with Kubernetes">
+    <meta itemprop="description" content="Unleash the power of containerization at the edge with K3s!">
+    <meta itemprop="datePublished" content="2024-04-30T17:37:35+03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Taming the Edge with Kubernetes
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p><img src="../../../../assets/k3s.svg" style="width:1.09894in;height:0.42424in; background-color: #ccc" /></p>
+
+<h2 id="intro">Intro</h2>
+
+<p>Kubernetes has become the go-to solution for container orchestration in
+today’s IT landscape. Gartner’s “<a href="https://www.gartner.com/en/documents/3988026">The CTO’s Guide to Containers and
+Kubernetes</a>” confirms
+this, highlighting the widespread adoption and increasing importance of
+Kubernetes by 2027. However, deploying traditional Kubernetes at the
+network’s edge or for resource-constrained Internet of Things (IoT)
+devices can be challenging due to their resource requirements.</p>
+
+<p>This is where <a href="https://k3s.io/">K3s</a> comes in. K3s is a lightweight
+Kubernetes distribution specifically designed for edge and IoT
+deployments, originally developed by <strong>RANCHER</strong> and is a <strong><a href="https://www.cncf.io">Cloud
+Native Computing Foundation (CNCF)</a></strong> Sandbox
+Project. Packed with features that make it perfect for
+resource-constrained environments, K3s allows you to bring the power and
+flexibility of Kubernetes to the farthest reaches of your network.</p>
+
+<h2 id="why-kubernetes-at-the-edge-and-iot">Why Kubernetes at the Edge and IoT?</h2>
+
+<p>There are several compelling reasons to deploy containerized
+applications at the edge and for IoT devices. Firstly, containerization
+enables faster response time for real-time processing. By processing
+data closer to its source, you reduce latency and improve overall
+application performance. Secondly, containerization can enhance data
+security by keeping data local to edge devices. This reduces the risk of
+data breaches associated with centralized cloud storage. Finally,
+containerization helps you reduce reliance on centralized cloud
+resources, leading to potentially lower costs and improved operational
+efficiency.</p>
+
+<p>But how can Kubernetes, known for its complexity, be effectively
+utilized at the edge? This is where K3s shines.</p>
+
+<h2 id="enter-k3s-a-lightweight-kubernetes-for-the-edge">Enter K3s: A Lightweight Kubernetes for the Edge</h2>
+
+<p>K3s is a stripped-down version of Kubernetes designed for
+resource-constrained environments. Here are some key features that make
+K3s the perfect choice for edge and IoT deployments:</p>
+
+<p><strong>Reduced complexity through a smaller footprint</strong>: K3s is packaged as a
+single <strong><em>&lt;70MB</em></strong> binary and eliminates the need for complex
+external dependencies like <strong>etcd</strong> (distributed key-value store) by
+using a lightweight SQLite database for cluster state management. This
+simplifies deployment and ongoing maintenance.</p>
+
+<p>All k8s control plane components are consolidated into a single binary
+and run as unified process.
+<img src="../../../assets/k3s_arch.svg" style="width:6.11342in;height:3.33966in" /><a href="https://docs.k3s.io/architecture">https://docs.K3s.io/architecture
+</a></p>
+
+<p><strong>Minimal resource requirements</strong>: K3s has a small footprint, requiring
+less CPU, memory, and storage compared to traditional Kubernetes. This
+makes it perfect for devices with limited resources e.g. single-board
+computers like Raspberry Pi<img src="../../../assets/pi.png" style="width:0.32576in;height:0.22803in" alt="A green circuit board with many different components Description automatically generated" />and
+etc.</p>
+
+<p><strong>Single-node and multi-node cluster support</strong>: K3s can run on a single
+device or be scaled to multiple nodes for distributed processing,
+including support of an HA (Highly Available) mode, offering flexibility
+based on your specific needs.</p>
+
+<p><img src="../../../assets/k3s_nodes.svg" style="width:5.91666in;height:3.42484in; background-color: #ccc" /></p>
+
+<p><a href="https://docs.k3s.io/architecture">https://docs.K3s.io/architecture</a></p>
+
+<p><strong>Fast installation and deployment</strong>: K3s can be deployed in minutes
+with minimal configuration, reducing setup time and getting your
+applications up and running quickly.</p>
+
+<p><strong>Security:</strong> Secure out of the box, with settings pre-configured for
+lightweight environments, K3s can be installed in an air-gapped (no
+Internet connectivity) environment, support enabling secrets encryption
+at rest.</p>
+
+<p>Here is some comparison table: Kubernetes vs K3s</p>
+
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 36%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Feature</strong></th>
+<th><strong>Kubernetes</strong></th>
+<th><strong>K3s</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Base Resource Requirement</td>
+<td>Typically requires at least<br />
+2 CPUs and 2GB RAM to start</td>
+<td>Can run effectively on as little as<br />
+1 CPU and 512MB RAM</td>
+</tr>
+<tr class="even">
+<td>Storage Options</td>
+<td>Multiple</td>
+<td>Local Only</td>
+</tr>
+<tr class="odd">
+<td>Feature Set</td>
+<td>Full</td>
+<td>No Alpha and Legacy</td>
+</tr>
+<tr class="even">
+<td>Deployment Complexity</td>
+<td>High</td>
+<td>Low</td>
+</tr>
+<tr class="odd">
+<td>High Availability</td>
+<td>Robust, with advanced mechanisms</td>
+<td>Simplified, suitable for smaller-scale deployments</td>
+</tr>
+<tr class="even">
+<td>Ecosystem and Community</td>
+<td>Vast and mature</td>
+<td>Growing, with a focus on edge and IoT</td>
+</tr>
+<tr class="odd">
+<td>Use Cases</td>
+<td>Large-scale, enterprise-grade deployments</td>
+<td>Edge computing, IoT, resource-constrained environments</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="real-world-use-cases-and-examples">Real-world use cases and examples</h2>
+
+<p>K3s is already being used to power a wide range of innovative edge and
+IoT applications:</p>
+
+<ul>
+  <li>
+    <p><strong>Industrial automation and control systems:</strong> K3s can manage
+containerized applications for real-time data processing and control
+of industrial machinery on factory floors.</p>
+  </li>
+  <li>
+    <p><strong>Smart city infrastructure and traffic management:</strong> K3s can deploy
+and manage applications for traffic signal optimization,
+environmental monitoring, and intelligent waste management systems
+in smart cities.</p>
+  </li>
+  <li>
+    <p><strong>Connected healthcare devices and data processing:</strong> K3s can manage
+containerized applications for processing data from medical devices,
+enabling faster analysis and real-time decision-making in healthcare
+settings.</p>
+  </li>
+  <li>
+    <p><strong>Retail and logistics applications with edge computing:</strong> K3s can
+manage containerized applications for inventory management,
+real-time asset tracking, and localized data processing in logistics
+hubs.</p>
+  </li>
+</ul>
+
+<p>Beyond above here are some additional use cases:</p>
+
+<ul>
+  <li>
+    <p><strong>Development/Testing Environments:</strong> K3s can be integrated into
+CI/CD pipelines to create a lightweight and portable environment for
+testing and deploying containerized applications.</p>
+  </li>
+  <li>
+    <p><strong>Home Labs and Education/Training:</strong> K3s allows set up a
+lightweight Kubernetes cluster for experimentation, learning
+purposes and training courses<strong>.</strong> Building a home automation system
+to control lights, thermostats, and security cameras using
+Kubernetes-based software stacks.</p>
+  </li>
+</ul>
+
+<p>As the edge and IoT landscape continues to evolve, K3s holds immense
+potential for enabling even more complex deployments and integrations.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>K3s removes the resource limitations that previously hindered Kubernetes
+adoption at the edge and for IoT devices. It offers a lightweight,
+efficient, and scalable solution for managing containerized applications
+in resource-constrained environments. While there might be some
+challenges related to network connectivity or security considerations at
+the edge, the benefits of simplified management and scalability often
+outweigh these concerns.</p>
+
+<p>K3s is poised to play a crucial role in the future of edge computing and
+the IoT ecosystem, enabling innovative and scalable applications that
+leverage the power of containers at the network’s farthest reaches.</p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2024-04-30T17:37:35+03:00">April 30, 2024</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Taming+the+Edge+with+Kubernetes%20https%3A%2F%2Fstamak.github.io%2F2024%2F04%2F30%2Fk3s.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fstamak.github.io%2F2024%2F04%2F30%2Fk3s.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fstamak.github.io%2F2024%2F04%2F30%2Fk3s.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2024/03/05/reverse-port-fwd.html" class="pagination--pager" title="Reverse Port Forwarding
+">Previous</a>
+    
+    
+      <a href="/2025/04/12/Mqtt4OpenWrt.html" class="pagination--pager" title="Collect OpenWrt Metrics for Home Assistant
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 DevOps Notes. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-26K9QK19YL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-26K9QK19YL', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

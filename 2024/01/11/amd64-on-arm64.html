@@ -1,0 +1,415 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>amd64/x86_64 containers on Apple Silicon (arm64) overview - DevOps Notes</title>
+<meta name="description" content="Introduction">
+
+
+  <meta name="author" content="Stanislav Makar">
+  
+  <meta property="article:author" content="Stanislav Makar">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="DevOps Notes">
+<meta property="og:title" content="amd64/x86_64 containers on Apple Silicon (arm64) overview">
+<meta property="og:url" content="https://stamak.github.io/2024/01/11/amd64-on-arm64.html">
+
+
+  <meta property="og:description" content="Introduction">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2024-01-11T09:40:28+02:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://stamak.github.io/2024/01/11/amd64-on-arm64.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://stamak.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="DevOps Notes Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          DevOps Notes
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/bio-photo.png" alt="Stanislav Makar" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Stanislav Makar</h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Lviv, Ukraine</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="https://github.com/stamak" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/stanislav-makar" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="amd64/x86_64 containers on Apple Silicon (arm64) overview">
+    <meta itemprop="description" content="Introduction">
+    <meta itemprop="datePublished" content="2024-01-11T09:40:28+02:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">amd64/x86_64 containers on Apple Silicon (arm64) overview
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p><a href="https://en.wikipedia.org/wiki/Apple_silicon">Apple Silicon</a> marks a transformative shift from Intel x86 to ARM architecture, led by the <a href="https://en.wikipedia.org/wiki/Apple_M1">M1 chip</a>. This empowers Apple with greater control over hardware and software integration, enhancing performance and energy efficiency. Many of us use tools like Docker Desktop, Rancher Desktop, Podman Desktop, Lima, and others for containerized workflows. Notably, these tools leverage a <a href="https://en.wikipedia.org/wiki/Linux">Linux</a> VM to harness Linux kernel capabilities (cgroups and namespaces) required for containers.</p>
+
+<h2 id="understanding-qemu-user-space-emulation">Understanding QEMU User Space Emulation</h2>
+
+<p><a href="https://www.qemu.org">QEMU</a>, or Quick EMUlator, is a versatile tool for emulation. In user space emulation, QEMU acts as an interpreter, allowing the execution of foreign binaries. QEMU user mode operates in user space, translating system calls and instructions without requiring root privileges. Dynamic binary translation converts guest architecture instructions to the host’s architecture (e.g., Apple Silicon).</p>
+
+<h2 id="binfmt_misc-and-its-role">binfmt_misc and its role</h2>
+
+<p><a href="https://en.wikipedia.org/wiki/Binfmt_misc">binfmt_misc</a>, a feature in the Linux kernel, complements QEMU user space emulation. Configured with binfmt_misc, the kernel invokes QEMU to execute binaries for architectures other than the host’s.</p>
+
+<p><img src="/assets/QEMU-userspace-emulation.png" alt="QEMU userspace emulation" /></p>
+
+<p>Below is an example of process cmd for mysqld amd64 binary running on arm64 kernel:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">/usr/bin/qemu-x86_64 /usr/sbin/mysqld mysqld</code></pre></figure>
+
+<h2 id="benefits-over-full-qemu-system-emulation">Benefits over Full QEMU System Emulation</h2>
+
+<p>QEMU user space emulation offers improved performance by translating only essential instructions. It consumes fewer resources and simplifies the emulation process compared to full system emulation, making it advantageous for resource-constrained devices.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>QEMU user space emulation, coupled with binfmt_misc, enables seamless execution of amd64/x86_64 containers on Apple Silicon. This lightweight solution, focusing on essential instructions, outperforms full system emulation. Understanding these aspects lays a solid foundation for cross-architecture compatibility implementation.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2024-01-11T09:40:28+02:00">January 11, 2024</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=amd64%2Fx86_64+containers+on+Apple+Silicon+%28arm64%29+overview%20https%3A%2F%2Fstamak.github.io%2F2024%2F01%2F11%2Famd64-on-arm64.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fstamak.github.io%2F2024%2F01%2F11%2Famd64-on-arm64.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fstamak.github.io%2F2024%2F01%2F11%2Famd64-on-arm64.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2023/04/28/alb-ingress-advanced-routing.html" class="pagination--pager" title="AWS ALB Ingress Advanced Request Routing
+">Previous</a>
+    
+    
+      <a href="/2024/02/20/deployment-patterns.html" class="pagination--pager" title="Modern Deployment Patterns
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 DevOps Notes. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-26K9QK19YL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-26K9QK19YL', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

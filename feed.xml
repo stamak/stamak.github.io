@@ -1,0 +1,872 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.2">Jekyll</generator><link href="https://stamak.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://stamak.github.io/" rel="alternate" type="text/html" /><updated>2025-09-26T16:48:26+03:00</updated><id>https://stamak.github.io/feed.xml</id><title type="html">DevOps Notes</title><subtitle>This is DevOps notes, helpful notes about DevOps stuff such as Clouds(AWS, GCP), Infrastructure as Code (IaC), Kubernetes</subtitle><author><name>Stanislav Makar</name></author><entry><title type="html">Scaling Up: Why Your Cloud Run Deployments Need Helm</title><link href="https://stamak.github.io/2025/09/21/CloudRunAndHelm.html" rel="alternate" type="text/html" title="Scaling Up: Why Your Cloud Run Deployments Need Helm" /><published>2025-09-21T12:00:35+03:00</published><updated>2025-09-21T12:00:35+03:00</updated><id>https://stamak.github.io/2025/09/21/CloudRunAndHelm</id><content type="html" xml:base="https://stamak.github.io/2025/09/21/CloudRunAndHelm.html"><![CDATA[<p>The <code class="language-plaintext highlighter-rouge">gcloud</code> CLI is the Swiss Army knife of Google Cloud. For a single service, a quick <code class="language-plaintext highlighter-rouge">gcloud run deploy</code> is a developer’s best friend—fast, simple, and effective. But what happens when your project evolves from a single service into a complex ecosystem of microservices? What if you have different configurations for development, staging, and production environments?</p>
+
+<p>This is where the limitations of the <code class="language-plaintext highlighter-rouge">gcloud</code> CLI begin to surface. While powerful, it’s not designed for the kind of consistent, repeatable, and templated deployments that modern applications require.</p>
+
+<h2 id="the-problem-with-manual-gcloud-deployments">The Problem with Manual gcloud Deployments</h2>
+<p>Using <code class="language-plaintext highlighter-rouge">gcloud run deploy</code> for a multi-service application often leads to a few common problems:</p>
+
+<ul>
+  <li>
+    <p><strong>Manual Configuration Management</strong>: Each service deployment requires its own set of arguments for environment variables, secrets, and other settings. This often results in scattered shell scripts or, even worse, manual copy-pasting of commands for each environment. It’s a fragile process prone to human error and configuration drift.</p>
+  </li>
+  <li>
+    <p><strong>Lack of Resource Control</strong>: The <code class="language-plaintext highlighter-rouge">gcloud</code> CLI provides limited control over key deployment parameters like memory limits, CPU allocation, and maximum instances. For advanced use cases where fine-tuning performance and cost is critical, this lack of configurability is a major drawback.</p>
+  </li>
+  <li>
+    <p><strong>Lack of a Single Source of Truth</strong>: Your application’s state (its services, their configurations, and their relationships) is not stored in a single, version-controlled file. This makes it difficult to audit deployments, roll back to a known-good state, and onboard new team members.</p>
+  </li>
+  <li>
+    <p><strong>Complex CI/CD Pipelines</strong>: Integrating <code class="language-plaintext highlighter-rouge">gcloud</code> commands into a CI/CD pipeline for a multi-service app can be clunky. You often have to chain multiple, non-declarative commands, which can be hard to manage and debug.</p>
+  </li>
+</ul>
+
+<h2 id="the-declarative-alternative-deploying-with-yaml">The Declarative Alternative: Deploying with YAML</h2>
+<p>A significant step up from the command line is to use a declarative YAML manifest for your Cloud Run service. You can define your entire service configuration, including environment variables and resource limits, in a single file and deploy it using the <code class="language-plaintext highlighter-rouge">gcloud run services replace</code> command.</p>
+
+<p>This approach gives you a version-controlled, single source of truth for your service. For example, you can explicitly set CPU, memory, and scaling parameters in your YAML file:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">serving.knative.dev/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">my-app-service</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">annotations</span><span class="pi">:</span>
+        <span class="na">autoscaling.knative.dev/minScale</span><span class="pi">:</span> <span class="s2">"</span><span class="s">0"</span>
+        <span class="na">autoscaling.knative.dev/maxScale</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10"</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">containerConcurrency</span><span class="pi">:</span> <span class="m">80</span>
+      <span class="na">timeoutSeconds</span><span class="pi">:</span> <span class="m">300</span>
+      <span class="na">containers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">gcr.io/my-project/my-image:latest</span>
+          <span class="na">resources</span><span class="pi">:</span>
+            <span class="na">limits</span><span class="pi">:</span>
+              <span class="na">cpu</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1000m"</span>
+              <span class="na">memory</span><span class="pi">:</span> <span class="s2">"</span><span class="s">512Mi"</span>
+</code></pre></div></div>
+
+<p>While this method is a significant improvement, it is still limited. You would need to create a new, hard-coded YAML file for every service and every environment (e.g., <code class="language-plaintext highlighter-rouge">prod-service-a.yaml</code>, <code class="language-plaintext highlighter-rouge">dev-service-b.yaml</code>), which quickly becomes unmanageable for a microservices architecture.</p>
+
+<h2 id="the-helm-solution">The Helm Solution</h2>
+<p>Enter Helm. While it’s most famous as the package manager for Kubernetes, its templating and packaging capabilities are a perfect fit for solving Cloud Run’s advanced deployment challenges. Helm treats your entire application as a single, versioned package—a “chart.”</p>
+
+<p>By using Helm, you get the following key benefits:</p>
+
+<ul>
+  <li>
+    <p>Declarative and Version-Controlled Deployments: Your entire application manifest is defined in a Helm chart’s YAML files. This means your infrastructure is now treated as code. Every change is tracked in Git, providing an immutable history of your deployments.</p>
+  </li>
+  <li>
+    <p>Templating for Different Environments: Helm’s <code class="language-plaintext highlighter-rouge">values.yaml</code> file allows you to define configurable variables. You can have a single Helm chart and override values for different environments (e.g., <code class="language-plaintext highlighter-rouge">values-production.yaml</code> and <code class="language-plaintext highlighter-rouge">values-staging.yaml</code>), ensuring consistency while maintaining flexibility.</p>
+  </li>
+  <li>
+    <p>Atomic Deployments: With a single <code class="language-plaintext highlighter-rouge">helm install</code> or <code class="language-plaintext highlighter-rouge">helm upgrade</code> command, you can deploy your entire application stack. Helm handles the dependencies and ensures all components are deployed correctly, or rolls back if something fails. This replaces a dozen error-prone <code class="language-plaintext highlighter-rouge">gcloud</code> arguments with a single, reliable two-step process in our case.</p>
+  </li>
+  <li>
+    <p>Simplified CI/CD: Helm integrates seamlessly into CI/CD pipelines. You can define a single pipeline step to update your Helm values (e.g., set a new image tag) and then deploy the entire application with a single command.</p>
+  </li>
+</ul>
+
+<h2 id="how-to-do-it-helm-for-cloud-run">How to Do it: Helm for Cloud Run</h2>
+<p>The most direct way to leverage Helm with Cloud Run is by using its templating and packaging capabilities to generate a custom YAML manifest that you can then deploy directly to Cloud Run.</p>
+
+<p>Here’s a simplified breakdown of the process:</p>
+
+<ul>
+  <li>
+    <p>Create Your Helm Chart: Use the <code class="language-plaintext highlighter-rouge">helm create</code> command to generate a new chart directory. This gives you a standard structure with <code class="language-plaintext highlighter-rouge">Chart.yaml</code>, values.yaml, and a templates/ folder.</p>
+  </li>
+  <li>
+    <p>Define Your Cloud Run Service: In the templates/ directory, you’ll create a file (e.g., service.yaml) that defines your Cloud Run service using a Knative Service manifest. This manifest will use placeholders that reference your values.yaml file.
+For example, your <code class="language-plaintext highlighter-rouge">templates/service.yaml</code> might look something like this:</p>
+  </li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">serving.knative.dev/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">.Values.appName | quote</span> <span class="pi">}}</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">run.googleapis.com/ingress</span><span class="pi">:</span> <span class="s">internal-and-cloud-load-balancing</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">annotations</span><span class="pi">:</span>
+        <span class="na">autoscaling.knative.dev/maxScale</span><span class="pi">:</span>  <span class="pi">{{</span> <span class="nv">.Values.maxScale | default 10 | quote</span> <span class="pi">}}</span>
+        <span class="na">run.googleapis.com/network-interfaces</span><span class="pi">:</span> <span class="s1">'</span><span class="s">[{"network":"default","subnetwork":"yn-default-dev-us-east4-priv-0"}]'</span>
+        <span class="na">run.googleapis.com/vpc-access-egress</span><span class="pi">:</span> <span class="s">all-traffic</span>
+        <span class="na">run.googleapis.com/cpu-throttling</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">.Values.concurrency | default 'true' | quote</span> <span class="pi">}}</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">cloud.googleapis.com/location</span><span class="pi">:</span>  <span class="pi">{{</span> <span class="nv">.Values.region | quote</span> <span class="pi">}}</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">serviceAccountName</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">.Values.serviceAccountName | quote</span> <span class="pi">}}</span>
+      <span class="na">containers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">.Values.image.repository</span><span class="nv"> </span><span class="s">}}:{{</span><span class="nv"> </span><span class="s">.Values.image.tag</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">default</span><span class="nv"> </span><span class="s">.Chart.AppVersion</span><span class="nv"> </span><span class="s">}}"</span>
+          <span class="na">ports</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span>  <span class="pi">{{</span> <span class="nv">.Values.service.port | default 8000</span> <span class="pi">}}</span>
+          <span class="na">resources</span><span class="pi">:</span>
+          <span class="pi">{{</span><span class="nv">- if .Values.resources</span> <span class="pi">}}</span>
+            <span class="pi">{{</span><span class="nv">- toYaml .Values.resources | nindent 12</span> <span class="pi">}}</span>
+          <span class="pi">{{</span><span class="nv">- else</span> <span class="pi">}}</span>
+          <span class="pi">{{</span><span class="nv">- end</span> <span class="pi">}}</span>
+          <span class="na">env</span><span class="pi">:</span>
+            <span class="c1"># Literal environment variables from .Values.env</span>
+          <span class="pi">{{</span><span class="nv">- range $key</span><span class="pi">,</span> <span class="nv">$value</span> <span class="pi">:</span><span class="nv">= .Values.env</span> <span class="pi">}}</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">$key | quote</span> <span class="pi">}}</span>
+              <span class="na">value</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">$value | quote</span> <span class="pi">}}</span>
+          <span class="pi">{{</span><span class="nv">- end</span> <span class="pi">}}</span>
+
+            <span class="c1"># Secrets from .Values.secrets</span>
+          <span class="pi">{{</span><span class="nv">- range $envVarName</span><span class="pi">,</span> <span class="nv">$secretRef</span> <span class="pi">:</span><span class="nv">= .Values.secrets</span> <span class="pi">}}</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">$envVarName | quote</span> <span class="pi">}}</span>
+              <span class="na">valueFrom</span><span class="pi">:</span>
+                <span class="na">secretKeyRef</span><span class="pi">:</span>
+                  <span class="na">name</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">$secretRef.name | quote</span> <span class="pi">}}</span>
+                  <span class="na">key</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">$secretRef.key | default "latest" | quote</span> <span class="pi">}}</span> <span class="c1"># Default to 'latest' if not specified</span>
+          <span class="pi">{{</span><span class="nv">- end</span> <span class="pi">}}</span>
+
+      <span class="na">containerConcurrency</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">.Values.concurrency</span> <span class="pi">}}</span>
+      <span class="na">timeoutSeconds</span><span class="pi">:</span> <span class="pi">{{</span> <span class="nv">.Values.timeoutSeconds</span> <span class="pi">}}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Configure Your <code class="language-plaintext highlighter-rouge">values.yaml</code>: This file holds all the customizable values for your application. You can have a different <code class="language-plaintext highlighter-rouge">values.yaml</code> for each environment.
+    <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">appName</span><span class="pi">:</span> <span class="s">my-app-service</span>
+<span class="c1"># Cloud Run region</span>
+<span class="na">region</span><span class="pi">:</span> <span class="s">us-central1</span>
+<span class="c1"># Image configuration</span>
+<span class="na">image</span><span class="pi">:</span>
+<span class="na">repository</span><span class="pi">:</span> <span class="s2">"</span><span class="s">gcr.io/my-project/my-image"</span>
+<span class="na">tag</span><span class="pi">:</span> <span class="s2">"</span><span class="s">latest"</span>
+<span class="c1"># Service configuration</span>
+<span class="na">service</span><span class="pi">:</span>
+<span class="na">port</span><span class="pi">:</span> <span class="m">8000</span>
+<span class="c1"># Resource limits</span>
+<span class="na">resources</span><span class="pi">:</span>
+<span class="na">limits</span><span class="pi">:</span>
+  <span class="na">cpu</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1000m"</span>
+  <span class="na">memory</span><span class="pi">:</span> <span class="s2">"</span><span class="s">512Mi"</span>
+<span class="c1"># Scaling settings</span>
+<span class="na">maxScale</span><span class="pi">:</span> <span class="m">10</span>
+<span class="c1"># Concurrency and timeouts</span>
+<span class="na">concurrency</span><span class="pi">:</span> <span class="m">80</span>
+<span class="na">timeoutSeconds</span><span class="pi">:</span> <span class="m">300</span>
+<span class="c1"># Service account for the application</span>
+<span class="na">serviceAccountName</span><span class="pi">:</span> <span class="s">my-service-account</span>
+<span class="c1"># Environment variables for the container</span>
+<span class="na">env</span><span class="pi">:</span>
+<span class="na">DB_HOST</span><span class="pi">:</span> <span class="s2">"</span><span class="s">my-db-dev"</span>
+<span class="na">API_KEY</span><span class="pi">:</span> <span class="s2">"</span><span class="s">dev-key"</span>
+<span class="c1"># Secrets to be injected as environment variables</span>
+<span class="na">secrets</span><span class="pi">:</span>
+<span class="na">GCS_BUCKET</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">my-gcs-bucket-secret"</span>
+  <span class="na">key</span><span class="pi">:</span> <span class="s2">"</span><span class="s">bucket-name"</span>
+</code></pre></div>    </div>
+  </li>
+  <li>Deploy with Helm and gcloud: With your chart ready, you can deploy your application with a two-step process that can be easily automated in a CI/CD pipeline.
+    <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Generate the final Cloud Run YAML manifest</span>
+helm template my-app-release ./my-chart <span class="o">&gt;</span> my-app-service.yaml
+<span class="c"># Deploy the generated YAML to Cloud Run</span>
+gcloud run services replace my-app-service.yaml <span class="nt">--region</span><span class="o">=</span>us-central1
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>For a complete example, see this <a href="https://github.com/stamak/cloud-run-helm-chart">GitHub repository</a>.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>While the gcloud CLI is an excellent tool for quick and simple deployments, it can quickly become unwieldy for complex, multi-service applications. By adopting a declarative YAML approach, you gain some control, but for true enterprise-scale needs, Helm provides the ultimate solution. By adopting Helm, you can transform your Cloud Run deployments into a declarative, version-controlled, and repeatable process. This not only streamlines your CI/CD pipeline but also ensures consistency across all your environments, saving you time and headaches in the long run.</p>
+
+<hr />
+
+<p><em>This article was written with the assistance of Generative AI.</em></p>]]></content><author><name>Stanislav Makar</name></author><category term="GCP" /><category term="Google Cloud Platform" /><category term="Cloud Run" /><category term="Helm" /><summary type="html"><![CDATA[This article explores the limitations of using gcloud CLI for deploying multi-service applications on Google Cloud Run and advocates for using Helm to manage complex deployments effectively.]]></summary></entry><entry><title type="html">Collect OpenWrt Metrics for Home Assistant</title><link href="https://stamak.github.io/2025/04/12/Mqtt4OpenWrt.html" rel="alternate" type="text/html" title="Collect OpenWrt Metrics for Home Assistant" /><published>2025-04-12T12:00:35+03:00</published><updated>2025-04-12T12:00:35+03:00</updated><id>https://stamak.github.io/2025/04/12/Mqtt4OpenWrt</id><content type="html" xml:base="https://stamak.github.io/2025/04/12/Mqtt4OpenWrt.html"><![CDATA[<p><img src="/assets/Mqtt4OpenWrt.png" alt="HLA" height="1700px" width="700px" /></p>
+
+<p>Home Assistant is a powerful platform for home automation, and integrating it with OpenWrt-based routers provides valuable network insights. This guide walks you through setting up a lightweight MQTT client on your OpenWrt router to send metrics like CPU usage, memory consumption, and network speed directly to Home Assistant.</p>
+
+<p>We’ll use a small, Go-based MQTT client designed for OpenWrt devices to feed system stats to an MQTT broker, which Home Assistant then uses in real-time.</p>
+
+<h2 id="background">Background</h2>
+
+<p>The initial approach to collecting these metrics involved using SNMP with custom OIDs, with Home Assistant configured to pull the data. However, to shift to a push-based system, a decision was made to develop a custom, Go-based solution. This push method offers advantages over the pull method (like SNMP): reduced overhead on Home Assistant, real-time updates, simplified network configuration, improved scalability, and more reliable data delivery. Go was chosen for its efficiency, small binary size (final binary size is 4.8MB), and ease of cross-compilation, making it ideal for resource-constrained devices like OpenWRT routers. The source code for the MQTT client, named <strong>mqtt4openwrt</strong>, is available on <a href="https://github.com/stamak/mqtt4openwrt/">GitHub</a>.</p>
+
+<h2 id="why-this-matters">Why This Matters</h2>
+
+<p>OpenWrt, an operating system that provides a lot of flexibility for wireless routers, is often critical infrastructure in a smart home. Monitoring their performance provides insights into:</p>
+<ul>
+  <li>Bandwidth usage</li>
+  <li>System resource load</li>
+  <li>Troubleshooting degraded performance</li>
+  <li>Home network visibility in Home Assistant dashboards</li>
+</ul>
+
+<h2 id="project-overview">Project Overview</h2>
+
+<p>This project uses a lightweight Go application, specifically built for OpenWrt (MIPS architecture), to collect system-level metrics, including:</p>
+<ul>
+  <li><strong>Download and upload speed</strong></li>
+  <li><strong>Memory usage</strong></li>
+  <li><strong>CPU utilization</strong></li>
+</ul>
+
+<p>The client publishes these metrics to an MQTT broker, making them accessible to Home Assistant via MQTT sensors. The setup is minimal and can be extended with additional system metrics or custom scripts.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p>Before you begin, ensure you have:</p>
+<ul>
+  <li>Go installed and your Go environment configured</li>
+  <li>Access to your OpenWrt router via SSH</li>
+  <li>An MQTT broker (e.g., Mosquitto) reachable by both the router and Home Assistant</li>
+  <li>Home Assistant set up with MQTT integration</li>
+</ul>
+
+<p>Set up your Go environment:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">GOPATH</span><span class="o">=</span><span class="nv">$HOME</span>/bin/go/
+<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$GOPATH</span>/bin:<span class="nv">$PATH</span>
+</code></pre></div></div>
+
+<h2 id="building-the-mqtt-client">Building the MQTT Client</h2>
+
+<p>To compile the client for OpenWrt (MIPS architecture), run:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>src/mqtt-client
+<span class="nv">GOOS</span><span class="o">=</span>linux <span class="nv">GOARCH</span><span class="o">=</span>mipsle <span class="nv">GOMIPS</span><span class="o">=</span>softfloat go build <span class="nt">-ldflags</span><span class="o">=</span><span class="s2">"-w -s"</span> <span class="nt">-o</span> bin/mqtt-clnt
+<span class="nb">cd</span> -
+</code></pre></div></div>
+
+<p>This command builds a statically linked binary for deployment to your router.</p>
+
+<h2 id="configuration">Configuration</h2>
+
+<p>Before running the client, set the required environment variables:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">MQTT_BROKER</span><span class="o">=</span>127.0.0.1
+<span class="nb">export </span><span class="nv">MQTT_PORT</span><span class="o">=</span>1883
+<span class="nb">export </span><span class="nv">MQTT_USER</span><span class="o">=</span>mqtt-user
+<span class="nb">export </span><span class="nv">MQTT_PASS</span><span class="o">=</span>mqtt-pass
+<span class="nb">export </span><span class="nv">MQTT_TOPIC</span><span class="o">=</span><span class="s2">"routers/my-wrt"</span>
+</code></pre></div></div>
+
+<p>These values define how and where the client publishes its metrics.</p>
+
+<h2 id="deployment-to-openwrt">Deployment to OpenWrt</h2>
+
+<p>Transfer the binary to your router using SSH:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat </span>src/mqtt-client/bin/mqtt-clnt | <span class="nb">gzip</span> | ssh &lt;USER&gt;@&lt;HOST&gt; <span class="s1">'zcat - &gt; mqtt-clnt'</span>
+</code></pre></div></div>
+
+<p>Place the binary in <code class="language-plaintext highlighter-rouge">/root/</code> or another suitable location.</p>
+
+<h2 id="auto-start-on-boot">Auto-Start on Boot</h2>
+
+<p>To ensure the MQTT client starts automatically with your router, add this to <code class="language-plaintext highlighter-rouge">/etc/rc.local</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sleep </span>20s <span class="c"># Allow time for network interfaces to initialize</span>
+<span class="nb">source</span> /root/mqtt.conf
+<span class="o">(</span>/root/mqtt-clnt<span class="o">)</span> &amp;
+logger <span class="s2">"MQTT client started"</span>
+</code></pre></div></div>
+
+<p>Make sure your <code class="language-plaintext highlighter-rouge">mqtt.conf</code> file contains the environment variable definitions.</p>
+
+<h2 id="home-assistant-integration">Home Assistant Integration</h2>
+
+<p>To have Home Assistant pick up the metrics, define MQTT sensors in your <code class="language-plaintext highlighter-rouge">configuration.yaml</code>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">mqtt</span><span class="pi">:</span>
+  <span class="na">sensor</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">MyWrt</span><span class="nv"> </span><span class="s">Download"</span>
+    <span class="na">state_topic</span><span class="pi">:</span> <span class="s2">"</span><span class="s">routers/my-wrt"</span>
+    <span class="na">value_template</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">unit_of_measurement</span><span class="pi">:</span> <span class="s">Mbps</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">MyWrt</span><span class="nv"> </span><span class="s">Upload"</span>
+    <span class="na">state_topic</span><span class="pi">:</span> <span class="s2">"</span><span class="s">routers/my-wrt"</span>
+    <span class="na">value_template</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">unit_of_measurement</span><span class="pi">:</span> <span class="s">Mbps</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">MyWrt</span><span class="nv"> </span><span class="s">CPU"</span>
+    <span class="na">state_topic</span><span class="pi">:</span> <span class="s2">"</span><span class="s">routers/my-wrt"</span>
+    <span class="na">value_template</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">unit_of_measurement</span><span class="pi">:</span> <span class="s1">'</span><span class="s">%'</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">MyWrt</span><span class="nv"> </span><span class="s">Memory"</span>
+    <span class="na">state_topic</span><span class="pi">:</span> <span class="s2">"</span><span class="s">routers/my-wrt"</span>
+    <span class="na">value_template</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">unit_of_measurement</span><span class="pi">:</span> <span class="s1">'</span><span class="s">%'</span>
+</code></pre></div></div>
+
+<p>After restarting Home Assistant or reloading YAML configuration, you should see your router’s metrics in your dashboard.</p>
+
+<p><img src="/assets/Mqtt4OpenWrtDownloadGraph.png" alt="Donwload speed dashboard" height="1700px" width="700px" /></p>
+
+<h2 id="final-thoughts">Final Thoughts</h2>
+
+<p>This setup is ideal for smart home enthusiasts who want deeper visibility into their network health. The MQTT client is simple, flexible, and efficient — and can be enhanced further to support additional OpenWrt statistics or other devices in your network.</p>
+
+<p>Whether you’re a tinkerer or a professional building out your smart environment, this solution adds a robust layer of observability to your home setup.</p>]]></content><author><name>Stanislav Makar</name></author><category term="Home Assistant" /><category term="OpenWrt" /><category term="Go lang" /><summary type="html"><![CDATA[This guide details how to set up an MQTT client on your OpenWrt router to send performance metrics to Home Assistant.]]></summary></entry><entry><title type="html">Taming the Edge with Kubernetes</title><link href="https://stamak.github.io/2024/04/30/k3s.html" rel="alternate" type="text/html" title="Taming the Edge with Kubernetes" /><published>2024-04-30T17:37:35+03:00</published><updated>2024-04-30T17:37:35+03:00</updated><id>https://stamak.github.io/2024/04/30/k3s</id><content type="html" xml:base="https://stamak.github.io/2024/04/30/k3s.html"><![CDATA[<p><img src="../../../../assets/k3s.svg" style="width:1.09894in;height:0.42424in; background-color: #ccc" /></p>
+
+<h2 id="intro">Intro</h2>
+
+<p>Kubernetes has become the go-to solution for container orchestration in
+today’s IT landscape. Gartner’s “<a href="https://www.gartner.com/en/documents/3988026">The CTO’s Guide to Containers and
+Kubernetes</a>” confirms
+this, highlighting the widespread adoption and increasing importance of
+Kubernetes by 2027. However, deploying traditional Kubernetes at the
+network’s edge or for resource-constrained Internet of Things (IoT)
+devices can be challenging due to their resource requirements.</p>
+
+<p>This is where <a href="https://k3s.io/">K3s</a> comes in. K3s is a lightweight
+Kubernetes distribution specifically designed for edge and IoT
+deployments, originally developed by <strong>RANCHER</strong> and is a <strong><a href="https://www.cncf.io">Cloud
+Native Computing Foundation (CNCF)</a></strong> Sandbox
+Project. Packed with features that make it perfect for
+resource-constrained environments, K3s allows you to bring the power and
+flexibility of Kubernetes to the farthest reaches of your network.</p>
+
+<h2 id="why-kubernetes-at-the-edge-and-iot">Why Kubernetes at the Edge and IoT?</h2>
+
+<p>There are several compelling reasons to deploy containerized
+applications at the edge and for IoT devices. Firstly, containerization
+enables faster response time for real-time processing. By processing
+data closer to its source, you reduce latency and improve overall
+application performance. Secondly, containerization can enhance data
+security by keeping data local to edge devices. This reduces the risk of
+data breaches associated with centralized cloud storage. Finally,
+containerization helps you reduce reliance on centralized cloud
+resources, leading to potentially lower costs and improved operational
+efficiency.</p>
+
+<p>But how can Kubernetes, known for its complexity, be effectively
+utilized at the edge? This is where K3s shines.</p>
+
+<h2 id="enter-k3s-a-lightweight-kubernetes-for-the-edge">Enter K3s: A Lightweight Kubernetes for the Edge</h2>
+
+<p>K3s is a stripped-down version of Kubernetes designed for
+resource-constrained environments. Here are some key features that make
+K3s the perfect choice for edge and IoT deployments:</p>
+
+<p><strong>Reduced complexity through a smaller footprint</strong>: K3s is packaged as a
+single <strong><em>&lt;70MB</em></strong> binary and eliminates the need for complex
+external dependencies like <strong>etcd</strong> (distributed key-value store) by
+using a lightweight SQLite database for cluster state management. This
+simplifies deployment and ongoing maintenance.</p>
+
+<p>All k8s control plane components are consolidated into a single binary
+and run as unified process.
+<img src="../../../assets/k3s_arch.svg" style="width:6.11342in;height:3.33966in" /><a href="https://docs.k3s.io/architecture">https://docs.K3s.io/architecture
+</a></p>
+
+<p><strong>Minimal resource requirements</strong>: K3s has a small footprint, requiring
+less CPU, memory, and storage compared to traditional Kubernetes. This
+makes it perfect for devices with limited resources e.g. single-board
+computers like Raspberry Pi<img src="../../../assets/pi.png" style="width:0.32576in;height:0.22803in" alt="A green circuit board with many different components Description automatically generated" />and
+etc.</p>
+
+<p><strong>Single-node and multi-node cluster support</strong>: K3s can run on a single
+device or be scaled to multiple nodes for distributed processing,
+including support of an HA (Highly Available) mode, offering flexibility
+based on your specific needs.</p>
+
+<p><img src="../../../assets/k3s_nodes.svg" style="width:5.91666in;height:3.42484in; background-color: #ccc" /></p>
+
+<p><a href="https://docs.k3s.io/architecture">https://docs.K3s.io/architecture</a></p>
+
+<p><strong>Fast installation and deployment</strong>: K3s can be deployed in minutes
+with minimal configuration, reducing setup time and getting your
+applications up and running quickly.</p>
+
+<p><strong>Security:</strong> Secure out of the box, with settings pre-configured for
+lightweight environments, K3s can be installed in an air-gapped (no
+Internet connectivity) environment, support enabling secrets encryption
+at rest.</p>
+
+<p>Here is some comparison table: Kubernetes vs K3s</p>
+
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 36%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Feature</strong></th>
+<th><strong>Kubernetes</strong></th>
+<th><strong>K3s</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Base Resource Requirement</td>
+<td>Typically requires at least<br />
+2 CPUs and 2GB RAM to start</td>
+<td>Can run effectively on as little as<br />
+1 CPU and 512MB RAM</td>
+</tr>
+<tr class="even">
+<td>Storage Options</td>
+<td>Multiple</td>
+<td>Local Only</td>
+</tr>
+<tr class="odd">
+<td>Feature Set</td>
+<td>Full</td>
+<td>No Alpha and Legacy</td>
+</tr>
+<tr class="even">
+<td>Deployment Complexity</td>
+<td>High</td>
+<td>Low</td>
+</tr>
+<tr class="odd">
+<td>High Availability</td>
+<td>Robust, with advanced mechanisms</td>
+<td>Simplified, suitable for smaller-scale deployments</td>
+</tr>
+<tr class="even">
+<td>Ecosystem and Community</td>
+<td>Vast and mature</td>
+<td>Growing, with a focus on edge and IoT</td>
+</tr>
+<tr class="odd">
+<td>Use Cases</td>
+<td>Large-scale, enterprise-grade deployments</td>
+<td>Edge computing, IoT, resource-constrained environments</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="real-world-use-cases-and-examples">Real-world use cases and examples</h2>
+
+<p>K3s is already being used to power a wide range of innovative edge and
+IoT applications:</p>
+
+<ul>
+  <li>
+    <p><strong>Industrial automation and control systems:</strong> K3s can manage
+containerized applications for real-time data processing and control
+of industrial machinery on factory floors.</p>
+  </li>
+  <li>
+    <p><strong>Smart city infrastructure and traffic management:</strong> K3s can deploy
+and manage applications for traffic signal optimization,
+environmental monitoring, and intelligent waste management systems
+in smart cities.</p>
+  </li>
+  <li>
+    <p><strong>Connected healthcare devices and data processing:</strong> K3s can manage
+containerized applications for processing data from medical devices,
+enabling faster analysis and real-time decision-making in healthcare
+settings.</p>
+  </li>
+  <li>
+    <p><strong>Retail and logistics applications with edge computing:</strong> K3s can
+manage containerized applications for inventory management,
+real-time asset tracking, and localized data processing in logistics
+hubs.</p>
+  </li>
+</ul>
+
+<p>Beyond above here are some additional use cases:</p>
+
+<ul>
+  <li>
+    <p><strong>Development/Testing Environments:</strong> K3s can be integrated into
+CI/CD pipelines to create a lightweight and portable environment for
+testing and deploying containerized applications.</p>
+  </li>
+  <li>
+    <p><strong>Home Labs and Education/Training:</strong> K3s allows set up a
+lightweight Kubernetes cluster for experimentation, learning
+purposes and training courses<strong>.</strong> Building a home automation system
+to control lights, thermostats, and security cameras using
+Kubernetes-based software stacks.</p>
+  </li>
+</ul>
+
+<p>As the edge and IoT landscape continues to evolve, K3s holds immense
+potential for enabling even more complex deployments and integrations.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>K3s removes the resource limitations that previously hindered Kubernetes
+adoption at the edge and for IoT devices. It offers a lightweight,
+efficient, and scalable solution for managing containerized applications
+in resource-constrained environments. While there might be some
+challenges related to network connectivity or security considerations at
+the edge, the benefits of simplified management and scalability often
+outweigh these concerns.</p>
+
+<p>K3s is poised to play a crucial role in the future of edge computing and
+the IoT ecosystem, enabling innovative and scalable applications that
+leverage the power of containers at the network’s farthest reaches.</p>]]></content><author><name>Stanislav Makar</name></author><category term="devops" /><category term="k8s" /><category term="kubernetes" /><category term="k3s" /><category term="edge" /><summary type="html"><![CDATA[Unleash the power of containerization at the edge with K3s!]]></summary></entry><entry><title type="html">Reverse Port Forwarding</title><link href="https://stamak.github.io/2024/03/05/reverse-port-fwd.html" rel="alternate" type="text/html" title="Reverse Port Forwarding" /><published>2024-03-05T18:24:34+02:00</published><updated>2024-03-05T18:24:34+02:00</updated><id>https://stamak.github.io/2024/03/05/reverse-port-fwd</id><content type="html" xml:base="https://stamak.github.io/2024/03/05/reverse-port-fwd.html"><![CDATA[<h1 id="connecting-from-a-kubernetes-to-a-service-running-on-your-local-machine">Connecting from a Kubernetes to a Service running on your local machine</h1>
+
+<h2 id="introduction">Introduction</h2>
+<p>Sometimes you need to connect from a service running in a Kubernetes cluster to a service running on your local machine. This can be useful for debugging, testing, or development purposes. In this article, we’ll explore how to set up reverse port forwarding to enable this kind of connection.</p>
+
+<h2 id="high-level-architecture">High-Level Architecture</h2>
+<p><img src="/assets/RvrsPortFwd.png" alt="aReverse Port Forwarding" height="1700px" width="700px" />
+As shown in the diagram, the service running in the Kubernetes cluster needs to connect to a service running on your local machine.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">kubectl port-forward</code> command is used to forward a local port <code class="language-plaintext highlighter-rouge">8022</code> to the ssh server pod port <code class="language-plaintext highlighter-rouge">22</code> running in the Kubernetes cluster.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">ssh -R</code> command is used to let us forward the remote port <code class="language-plaintext highlighter-rouge">50080</code> from the ssh server pod to the local machine port <code class="language-plaintext highlighter-rouge">8080</code>.</p>
+
+<p>The kubernetes service <code class="language-plaintext highlighter-rouge">fwd-to-local-dev</code> is used to expose the ssh server pod port <code class="language-plaintext highlighter-rouge">50080</code> as port <code class="language-plaintext highlighter-rouge">8080</code> to all services running on the Kubernetes cluster and the test pod as well.</p>
+
+<p>For testing purposes, a simple <code class="language-plaintext highlighter-rouge">netcat</code> is used to listen on a port <code class="language-plaintext highlighter-rouge">8080</code> on the local machine, and a test pod is used to connect to this service with <code class="language-plaintext highlighter-rouge">netcat</code> client through the reverse port forwarding tunnel.</p>
+
+<h2 id="kubernetes-resources-congifurations">Kubernetes Resources Congifurations</h2>
+<p>Preapare the following configurations to deploy the resources in the Kubernetes cluster.</p>
+
+<p>Create a directory to store the configurations</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">mkdir </span>k8s-manifests
+<span class="nb">cd </span>k8s-manifests</code></pre></figure>
+
+<hr />
+<p>Pod Configuration</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">Alpine Linux</code> is used as a base image for the ssh server pod.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/name: fwd-to-local-dev
+  name: reverse-port-forward
+spec:
+  containers:
+    - name: alpine-ssh-server
+      image: alpine:3.19
+      command: ["sh", "-c", "apk add openssh-server;
+        ssh-keygen -A;
+        echo 'PermitRootLogin yes' &gt;&gt; /etc/ssh/sshd_config;
+        sed -i -e 's/AllowTcpForwarding</span><span class="se">\ </span><span class="sh">no/AllowTcpForwarding</span><span class="se">\ </span><span class="sh">yes/g' /etc/ssh/sshd_config;
+        sed -i -e 's/GatewayPorts</span><span class="se">\ </span><span class="sh">no/GatewayPorts</span><span class="se">\ </span><span class="sh">yes/g' /etc/ssh/sshd_config;
+        echo 'root:dummy_passwd'|chpasswd;
+        /usr/sbin/sshd -D -e"]
+      ports:
+        - containerPort: 50080
+          name: rvrs-prt-fwd
+          protocol: TCP
+EOF</span></code></pre></figure>
+
+<hr />
+<p>Service Configuration</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; svc.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: fwd-to-local-dev
+spec:
+  selector:
+    app.kubernetes.io/name: fwd-to-local-dev
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 50080
+EOF</span></code></pre></figure>
+
+<hr />
+<p>Test pod configuration</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; test-pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/name: test-pod
+  name: test-pod
+spec:
+  containers:
+    - name: test-pod
+      image: alpine:3.19
+      command: ["sh", "-c", "apk add netcat-openbsd;
+        while true; do sleep 1; done"]
+EOF</span></code></pre></figure>
+
+<hr />
+<p>Deploy the resources</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">stamak@terminal1:~/k8s-manifests<span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-la</span>
+total 12
+drwxr-xr-x   5 stamak staff  160 бер  6 18:03 <span class="nb">.</span>
+drwxr-x---+ 97 stamak staff 3104 бер  6 18:01 ..
+<span class="nt">-rw-r--r--</span>   1 stamak staff  677 бер  6 18:02 pod.yml
+<span class="nt">-rw-r--r--</span>   1 stamak staff  197 бер  6 18:02 svc.yml
+<span class="nt">-rw-r--r--</span>   1 stamak staff  251 бер  6 18:03 test-pod.yml
+stamak@terminal1:~/k8s-manifests<span class="nv">$ </span>kubectl apply <span class="nt">-f</span> <span class="nb">.</span>
+pod/reverse-port-forward created
+service/fwd-to-local-dev created
+pod/test-pod created</code></pre></figure>
+
+<hr />
+<h2 id="setting-up-the-reverse-port-forwarding">Setting up the Reverse Port Forwarding</h2>
+<p>To set up the reverse port forwarding, you need to run the following command on your local machine:</p>
+
+<p><strong>[Terminal 1]</strong> Forward the local port 8022 to the ssh server pod</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">kubectl port-forward pod/reverse-port-forward 8022:22</code></pre></figure>
+
+<hr />
+
+<p><strong>[Terminal 2]</strong> Start locally service listening on port or <code class="language-plaintext highlighter-rouge">netcat</code> in my case</p>
+
+<p><em>NOTE</em>: <code class="language-plaintext highlighter-rouge">8080</code> port is port where my netcat service is listening on.
+Just skip this step if you already have a service running on your local machine.
+Please do not forget to replace the port number in the next step with the port your service is listening on.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">nc <span class="nt">-l</span> 8080</code></pre></figure>
+
+<hr />
+
+<p><strong>[Terminal 3]</strong> Open a reverse ssh tunnel to the ssh server pod</p>
+
+<p><em>NOTE</em>: <code class="language-plaintext highlighter-rouge">8080</code> port is port where your local service is listening on.
+You can replace it with the port your service is listening on.</p>
+
+<p><em>NOTE</em>: Password: <code class="language-plaintext highlighter-rouge">dummy_passwd</code></p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">ssh <span class="nt">-R</span> 50080:localhost:8080 root@localhost <span class="nt">-p</span> 8022 <span class="nt">-oStrictHostKeyChecking</span><span class="o">=</span>no <span class="nt">-oUserKnownHostsFile</span><span class="o">=</span>/dev/null</code></pre></figure>
+
+<hr />
+
+<p><strong>[Terminal 4]</strong> Testing the Connection</p>
+
+<p>To test the connection, you can run the following command in the test pod:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">kubectl <span class="nb">exec</span> <span class="nt">-it</span> test-pod <span class="nt">--</span> sh
+/ <span class="c"># nc fwd-to-local-dev 8080</span></code></pre></figure>
+
+<hr />
+
+<h2 id="screen-shot">Screen Shot</h2>
+<p><img src="/assets/RvrsPortFwdScreen2.png" alt="ScreenShot" height="1700px" width="700px" /></p>
+
+<h2 id="additional-resources">Additional Resources</h2>
+<ul>
+  <li><a href="https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/">Kubernetes Port Forwarding</a></li>
+  <li><a href="https://www.ssh.com/academy/ssh/tunneling-example#remote-forwarding">SSH Remote Forwarding</a></li>
+  <li><a href="https://www.tecmint.com/netcat-nc-command-examples/">Netcat</a></li>
+</ul>]]></content><author><name>Stanislav Makar</name></author><category term="devops" /><category term="k8s" /><category term="kubernetes" /><category term="port-forward" /><category term="reverse" /><category term="ssh" /><category term="netcat" /><category term="kubectl" /><category term="networking" /><summary type="html"><![CDATA[Connecting from a Kubernetes to a Service running on your local machine]]></summary></entry><entry><title type="html">Modern Deployment Patterns</title><link href="https://stamak.github.io/2024/02/20/deployment-patterns.html" rel="alternate" type="text/html" title="Modern Deployment Patterns" /><published>2024-02-20T17:40:28+02:00</published><updated>2024-02-20T17:40:28+02:00</updated><id>https://stamak.github.io/2024/02/20/deployment-patterns</id><content type="html" xml:base="https://stamak.github.io/2024/02/20/deployment-patterns.html"><![CDATA[<h1 id="a-guide-to-modern-deployment-patterns">A Guide to Modern Deployment Patterns</h1>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>In the fast-paced world of software development, efficient and reliable deployments are critical. DevOps and Architects face the challenge of minimizing downtime, ensuring stability, and adapting to ever-changing infrastructure landscapes. This guide explores several prominent deployment patterns, empowering you to choose the most suitable approach for your unique needs.</p>
+
+<h2 id="choosing-the-right-pattern">Choosing the Right Pattern</h2>
+
+<p>Selecting the optimal deployment pattern hinges on various factors, including application architecture, infrastructure setup, and business goals. Each pattern offers distinct advantages and trade-offs:</p>
+
+<ol>
+  <li>
+    <p><strong>In-place (a.k.a. Recreate, All at once) Deployments</strong></p>
+
+    <p>A straightforward approach where the existing environment is replaced with the new version.</p>
+    <ul>
+      <li>Pros: Simple implementation, suitable for monolithic applications, risk-averse environments.</li>
+      <li>Cons: Downtime, requires maintainance window, potential data loss, slow rollback.</li>
+      <li>Use cases: Small applications, low-impact updates, risk-averse environments.</li>
+    </ul>
+
+    <p><img src="/assets/Recreate.png" alt="Rolling Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Rolling Deployments [WIP]</strong></p>
+
+    <p>A gradual upgrade of servers one at a time, minimizing initial downtime.</p>
+    <ul>
+      <li>Pros: Simple implementation, suitable for monolithic applications, risk-averse environments.</li>
+      <li>Cons: Potential cascading failures, longer overall downtime for large infrastructures.</li>
+      <li>Use cases: Simple applications, low-impact updates, risk-averse environments.</li>
+    </ul>
+
+    <p><img src="/assets/Rolling.png" alt="Rolling Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Blue-Green Deployments</strong></p>
+
+    <p>Utilizes two identical environments (blue and green). Traffic shifts to the green environment after validation in the blue environment.</p>
+    <ul>
+      <li>Pros: Zero downtime, quick rollback, ideal for stateless applications.</li>
+      <li>Cons: Requires double the infrastructure, complex setup, not suitable for stateful applications.</li>
+      <li>Use cases: Microservices architectures, high-traffic applications, frequent deployments.</li>
+    </ul>
+
+    <p><img src="/assets/Blue-Green.png" alt="Blue-Green Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Canary Deployments</strong></p>
+
+    <p>A controlled rollout where the new version is gradually pushed to a small subset of users (canaries) before broader release.</p>
+    <ul>
+      <li>Pros: Early detection of issues, minimal impact on majority of users, controlled rollout.</li>
+      <li>Cons: Requires traffic routing mechanisms, potential performance overhead.</li>
+      <li>Use cases: Risky changes, large user base, feature experimentation.</li>
+    </ul>
+
+    <p><img src="/assets/Canary.png" alt="Canary Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Cluster Immune System (CIS)</strong></p>
+
+    <p>Extention of Canary Deployments, CIS focuses on enhanced monitoring and automated rollback within the existing production environment.</p>
+    <ul>
+      <li>Pros: Rapid response to issues, reduced downtime, increased confidence in deployments.</li>
+      <li>Cons: Defining critical metrics, setting thresholds, handling false positives.</li>
+      <li>Use cases: Applications requiring real-time feedback and rapid response to potential issues.</li>
+    </ul>
+
+    <p><img src="/assets/ClusterImmuneSystemV2.png" alt="Cluster Immune System" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Feature Toggle (a.k.a. feature flag, feature switch)</strong></p>
+
+    <p>Enables or disables features dynamically using configuration flags, offering flexibility and control.</p>
+    <ul>
+      <li>Pros: Gradual feature rollout, A/B testing, safer deployments.</li>
+      <li>Cons: Increased complexity, potential performance overhead.</li>
+      <li>Use cases: Gradual feature rollout, phased experimentation, managing dependencies.</li>
+    </ul>
+
+    <p><img src="/assets/FeatureToggle.png" alt="Feature Toggle" class="align-center;" height="700px" width="400px" /></p>
+  </li>
+</ol>
+
+<h2 id="emerging-trends">Emerging Trends</h2>
+
+<p>As deployment strategies evolve, consider incorporating trends like continuous delivery, multi-cloud deployments, and infrastructure-as-code (IaC) for automation and infrastructure management.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Understanding different deployment patterns is crucial for DevOps and Architects to make informed decisions. Experimenting with these patterns and leveraging modern tools allows you to optimize your deployments and achieve your desired outcomes. Remember, the optimal pattern depends on your specific project context and goals. By employing the right deployment pattern and embracing technological advancements, you can ensure reliable, efficient, and secure deployments that support your application’s success.</p>
+
+<h2 id="additional-resources">Additional Resources</h2>
+
+<ul>
+  <li><a href="https://itrevolution.com/product/the-devops-handbook-second-edition/">The DevOps Handbook:</a> How to Create World-Class Agility, Reliability, and Security in Technology Organizations by Gene Kim, Patrick Debois, John Willis, and Jez Humble</li>
+  <li><strong>Google Cloud Architecture Center:</strong> <a href="https://cloud.google.com/architecture/application-deployment-and-testing-strategies">Application deployment and testing strategies</a></li>
+  <li><a href="https://docs.aws.amazon.com/whitepapers/latest/practicing-continuous-integration-continuous-delivery/deployment-methods.html">Practicing Continuous Integration and Continuous Delivery on AWS</a></li>
+</ul>]]></content><author><name>Stanislav Makar</name></author><category term="DevOps" /><category term="Deployment" /><category term="Architecture" /><summary type="html"><![CDATA[A Guide to Modern Deployment Patterns]]></summary></entry><entry><title type="html">amd64/x86_64 containers on Apple Silicon (arm64) overview</title><link href="https://stamak.github.io/2024/01/11/amd64-on-arm64.html" rel="alternate" type="text/html" title="amd64/x86_64 containers on Apple Silicon (arm64) overview" /><published>2024-01-11T09:40:28+02:00</published><updated>2024-01-11T09:40:28+02:00</updated><id>https://stamak.github.io/2024/01/11/amd64-on-arm64</id><content type="html" xml:base="https://stamak.github.io/2024/01/11/amd64-on-arm64.html"><![CDATA[<h2 id="introduction">Introduction</h2>
+
+<p><a href="https://en.wikipedia.org/wiki/Apple_silicon">Apple Silicon</a> marks a transformative shift from Intel x86 to ARM architecture, led by the <a href="https://en.wikipedia.org/wiki/Apple_M1">M1 chip</a>. This empowers Apple with greater control over hardware and software integration, enhancing performance and energy efficiency. Many of us use tools like Docker Desktop, Rancher Desktop, Podman Desktop, Lima, and others for containerized workflows. Notably, these tools leverage a <a href="https://en.wikipedia.org/wiki/Linux">Linux</a> VM to harness Linux kernel capabilities (cgroups and namespaces) required for containers.</p>
+
+<h2 id="understanding-qemu-user-space-emulation">Understanding QEMU User Space Emulation</h2>
+
+<p><a href="https://www.qemu.org">QEMU</a>, or Quick EMUlator, is a versatile tool for emulation. In user space emulation, QEMU acts as an interpreter, allowing the execution of foreign binaries. QEMU user mode operates in user space, translating system calls and instructions without requiring root privileges. Dynamic binary translation converts guest architecture instructions to the host’s architecture (e.g., Apple Silicon).</p>
+
+<h2 id="binfmt_misc-and-its-role">binfmt_misc and its role</h2>
+
+<p><a href="https://en.wikipedia.org/wiki/Binfmt_misc">binfmt_misc</a>, a feature in the Linux kernel, complements QEMU user space emulation. Configured with binfmt_misc, the kernel invokes QEMU to execute binaries for architectures other than the host’s.</p>
+
+<p><img src="/assets/QEMU-userspace-emulation.png" alt="QEMU userspace emulation" /></p>
+
+<p>Below is an example of process cmd for mysqld amd64 binary running on arm64 kernel:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">/usr/bin/qemu-x86_64 /usr/sbin/mysqld mysqld</code></pre></figure>
+
+<h2 id="benefits-over-full-qemu-system-emulation">Benefits over Full QEMU System Emulation</h2>
+
+<p>QEMU user space emulation offers improved performance by translating only essential instructions. It consumes fewer resources and simplifies the emulation process compared to full system emulation, making it advantageous for resource-constrained devices.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>QEMU user space emulation, coupled with binfmt_misc, enables seamless execution of amd64/x86_64 containers on Apple Silicon. This lightweight solution, focusing on essential instructions, outperforms full system emulation. Understanding these aspects lays a solid foundation for cross-architecture compatibility implementation.</p>]]></content><author><name>Stanislav Makar</name></author><category term="arm" /><category term="apple silicon" /><category term="linux" /><category term="container" /><category term="qemu" /><category term="binfmt_misc" /><category term="docker" /><summary type="html"><![CDATA[Introduction]]></summary></entry><entry><title type="html">AWS ALB Ingress Advanced Request Routing</title><link href="https://stamak.github.io/2023/04/28/alb-ingress-advanced-routing.html" rel="alternate" type="text/html" title="AWS ALB Ingress Advanced Request Routing" /><published>2023-04-28T20:40:28+03:00</published><updated>2023-04-28T20:40:28+03:00</updated><id>https://stamak.github.io/2023/04/28/alb-ingress-advanced-routing</id><content type="html" xml:base="https://stamak.github.io/2023/04/28/alb-ingress-advanced-routing.html"><![CDATA[<p>AWS Application Load Balancer allows traffic to be routed based on HTTP header, HTTP request method,
+query string, source IP, in addition host and path-based routing.</p>
+
+<p>As it turns out, configuring a <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">k8s ingress</a> can be a bit tricky, as the
+<a href="https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.5/guide/ingress/annotations/#traffic-routing">Official documentations</a> does not provide good examples.
+In my example, I will show how to route requests with the host header “my-host.example.com” and
+the HTTP header “X-Custom-Header: CustomHeaderValue” to the Kubernetes service “my-srv” on port 8080.</p>
+
+<h2 id="prepare-ingress-k8s-manifest">Prepare ingress k8s manifest</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-srv-custom-header
+  annotations:
+    alb.ingress.kubernetes.io/conditions.header-based: |
+      <span class="o">[{</span><span class="s2">"field"</span>:<span class="s2">"http-header"</span>,<span class="s2">"httpHeaderConfig"</span>:<span class="o">{</span><span class="s2">"httpHeaderName"</span>: <span class="s2">"X-Custom-Header"</span>, <span class="s2">"values"</span>:[<span class="s2">"CustomHeaderValue"</span><span class="o">]}}]</span>
+    alb.ingress.kubernetes.io/actions.header-based: |
+      <span class="o">{</span><span class="s2">"type"</span>:<span class="s2">"forward"</span>,<span class="s2">"forwardConfig"</span>:<span class="o">{</span><span class="s2">"targetGroups"</span>:[<span class="o">{</span><span class="s2">"serviceName"</span>:<span class="s2">"my-srv"</span>,<span class="s2">"servicePort"</span>:8080<span class="o">}]}}</span>
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:1111111111:certificate/528f4790-1d24-xxxx-xxxx-a8f493a3c948
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - host: <span class="s2">"my-host.example.com"</span>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: header-based
+                port:
+                  name: use-annotation</code></pre></figure>
+
+<h2 id="verification">Verification</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nv">$ </span>curl <span class="nt">-H</span> <span class="s1">'X-Custom-Header: CustomHeaderValue'</span> https://my-host.example.com/healthcheck
+OK
+
+<span class="c"># no header</span>
+<span class="nv">$ </span>curl https://my-host.example.com/healthcheck
+Backend service does not exists</code></pre></figure>]]></content><author><name>Stanislav Makar</name></author><category term="aws" /><category term="k8s" /><category term="eks" /><category term="ingress" /><category term="alb" /><summary type="html"><![CDATA[AWS Application Load Balancer allows traffic to be routed based on HTTP header, HTTP request method, query string, source IP, in addition host and path-based routing.]]></summary></entry><entry><title type="html">RDS access via kubernetes as jump host</title><link href="https://stamak.github.io/2023/04/26/rds-access.html" rel="alternate" type="text/html" title="RDS access via kubernetes as jump host" /><published>2023-04-26T23:40:28+03:00</published><updated>2023-04-26T23:40:28+03:00</updated><id>https://stamak.github.io/2023/04/26/rds-access</id><content type="html" xml:base="https://stamak.github.io/2023/04/26/rds-access.html"><![CDATA[<p>Sometimes there is a need to connect to RDS in private VPC subnet having an access to EKS.
+It can be achieved with help of <code class="language-plaintext highlighter-rouge">socket</code> container deployed on top of k8s and setting up the tunnel with
+help of <code class="language-plaintext highlighter-rouge">kubectl port-forward</code></p>
+
+<h2 id="deploy-socat-pod">Deploy socat pod</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: rds-postgres-relay
+  name: rds-postgres-relay
+spec:
+  containers:
+    - name: rds-socat
+      image: alpine/socat:latest
+      args:
+        - <span class="s2">"TCP-LISTEN:5432,fork"</span>
+        - <span class="s2">"TCP:private-rds.c1xfw13.eu-central-1.rds.amazonaws.com:5432"</span>
+      ports:
+        - containerPort: 5432
+          name: postgres
+          protocol: TCP</code></pre></figure>
+
+<h2 id="set-up-tunnel">Set up tunnel:</h2>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">kubectl port-forward pod/rds-postgres-relay 45432:5432
+Forwarding from 127.0.0.1:45432 -&gt; 5432
+Forwarding from <span class="o">[</span>::1]:45432 -&gt; 5432
+Handling connection <span class="k">for </span>45432</code></pre></figure>
+
+<h2 id="configure-pgadmin-to-use-12700145432">Configure pgAdmin to use 127.0.0.1:45432</h2>
+
+<p><img src="/assets/pgAdmin4_connection_config.png" alt="pgAdmin4" /></p>]]></content><author><name>Stanislav Makar</name></author><category term="aws" /><category term="k8s" /><category term="eks" /><category term="jump host" /><category term="socat" /><summary type="html"><![CDATA[Sometimes there is a need to connect to RDS in private VPC subnet having an access to EKS. It can be achieved with help of socket container deployed on top of k8s and setting up the tunnel with help of kubectl port-forward]]></summary></entry><entry><title type="html">ALB Ingress Controller and Cost Optimization</title><link href="https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost.html" rel="alternate" type="text/html" title="ALB Ingress Controller and Cost Optimization" /><published>2023-04-16T23:40:28+03:00</published><updated>2023-04-16T23:40:28+03:00</updated><id>https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost</id><content type="html" xml:base="https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost.html"><![CDATA[<p>As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly,
+roughly one ALB costs ~$24 + extra per GB of processed data monthly.</p>
+
+<p>In order to save money there is a possibility to have use <code class="language-plaintext highlighter-rouge">One</code> ALB for all your k8s ingress resources.
+To acheave it one extra annotations should be added to all your ingress resources should have common annotaion:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">  annotations:
+    alb.ingress.kubernetes.io/group.name: shared-ingress</code></pre></figure>
+
+<p>Output for all ingress resources:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nv">$ </span>kubectl get ing <span class="nt">-A</span>
+NAMESPACE     NAME          CLASS  HOSTS                             ADDRESS                                                    PORTS    AGE
+default     ingress-1        alb    ingress-1.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h
+namespace2  ingress-2        alb    ingress-2.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h
+ns3         ingress-3        alb    ingress-3.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h</code></pre></figure>
+
+<p>For more details visit <a href="https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/ingress/annotations/#group.name">official docs</a>.</p>]]></content><author><name>Stanislav Makar</name></author><category term="aws" /><category term="alb" /><category term="k8s" /><category term="ingress" /><category term="aws" /><category term="k8s" /><category term="alb" /><summary type="html"><![CDATA[As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly, roughly one ALB costs ~$24 + extra per GB of processed data monthly.]]></summary></entry></feed>

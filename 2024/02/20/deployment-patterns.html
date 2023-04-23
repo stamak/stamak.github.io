@@ -1,0 +1,491 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Modern Deployment Patterns - DevOps Notes</title>
+<meta name="description" content="A Guide to Modern Deployment Patterns">
+
+
+  <meta name="author" content="Stanislav Makar">
+  
+  <meta property="article:author" content="Stanislav Makar">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="DevOps Notes">
+<meta property="og:title" content="Modern Deployment Patterns">
+<meta property="og:url" content="https://stamak.github.io/2024/02/20/deployment-patterns.html">
+
+
+  <meta property="og:description" content="A Guide to Modern Deployment Patterns">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2024-02-20T17:40:28+02:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://stamak.github.io/2024/02/20/deployment-patterns.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://stamak.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="DevOps Notes Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          DevOps Notes
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/bio-photo.png" alt="Stanislav Makar" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Stanislav Makar</h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Lviv, Ukraine</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="https://github.com/stamak" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/stanislav-makar" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Modern Deployment Patterns">
+    <meta itemprop="description" content="A Guide to Modern Deployment Patterns">
+    <meta itemprop="datePublished" content="2024-02-20T17:40:28+02:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Modern Deployment Patterns
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h1 id="a-guide-to-modern-deployment-patterns">A Guide to Modern Deployment Patterns</h1>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>In the fast-paced world of software development, efficient and reliable deployments are critical. DevOps and Architects face the challenge of minimizing downtime, ensuring stability, and adapting to ever-changing infrastructure landscapes. This guide explores several prominent deployment patterns, empowering you to choose the most suitable approach for your unique needs.</p>
+
+<h2 id="choosing-the-right-pattern">Choosing the Right Pattern</h2>
+
+<p>Selecting the optimal deployment pattern hinges on various factors, including application architecture, infrastructure setup, and business goals. Each pattern offers distinct advantages and trade-offs:</p>
+
+<ol>
+  <li>
+    <p><strong>In-place (a.k.a. Recreate, All at once) Deployments</strong></p>
+
+    <p>A straightforward approach where the existing environment is replaced with the new version.</p>
+    <ul>
+      <li>Pros: Simple implementation, suitable for monolithic applications, risk-averse environments.</li>
+      <li>Cons: Downtime, requires maintainance window, potential data loss, slow rollback.</li>
+      <li>Use cases: Small applications, low-impact updates, risk-averse environments.</li>
+    </ul>
+
+    <p><img src="/assets/Recreate.png" alt="Rolling Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Rolling Deployments [WIP]</strong></p>
+
+    <p>A gradual upgrade of servers one at a time, minimizing initial downtime.</p>
+    <ul>
+      <li>Pros: Simple implementation, suitable for monolithic applications, risk-averse environments.</li>
+      <li>Cons: Potential cascading failures, longer overall downtime for large infrastructures.</li>
+      <li>Use cases: Simple applications, low-impact updates, risk-averse environments.</li>
+    </ul>
+
+    <p><img src="/assets/Rolling.png" alt="Rolling Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Blue-Green Deployments</strong></p>
+
+    <p>Utilizes two identical environments (blue and green). Traffic shifts to the green environment after validation in the blue environment.</p>
+    <ul>
+      <li>Pros: Zero downtime, quick rollback, ideal for stateless applications.</li>
+      <li>Cons: Requires double the infrastructure, complex setup, not suitable for stateful applications.</li>
+      <li>Use cases: Microservices architectures, high-traffic applications, frequent deployments.</li>
+    </ul>
+
+    <p><img src="/assets/Blue-Green.png" alt="Blue-Green Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Canary Deployments</strong></p>
+
+    <p>A controlled rollout where the new version is gradually pushed to a small subset of users (canaries) before broader release.</p>
+    <ul>
+      <li>Pros: Early detection of issues, minimal impact on majority of users, controlled rollout.</li>
+      <li>Cons: Requires traffic routing mechanisms, potential performance overhead.</li>
+      <li>Use cases: Risky changes, large user base, feature experimentation.</li>
+    </ul>
+
+    <p><img src="/assets/Canary.png" alt="Canary Deployment" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Cluster Immune System (CIS)</strong></p>
+
+    <p>Extention of Canary Deployments, CIS focuses on enhanced monitoring and automated rollback within the existing production environment.</p>
+    <ul>
+      <li>Pros: Rapid response to issues, reduced downtime, increased confidence in deployments.</li>
+      <li>Cons: Defining critical metrics, setting thresholds, handling false positives.</li>
+      <li>Use cases: Applications requiring real-time feedback and rapid response to potential issues.</li>
+    </ul>
+
+    <p><img src="/assets/ClusterImmuneSystemV2.png" alt="Cluster Immune System" height="700px" width="400px" /></p>
+  </li>
+  <li>
+    <p><strong>Feature Toggle (a.k.a. feature flag, feature switch)</strong></p>
+
+    <p>Enables or disables features dynamically using configuration flags, offering flexibility and control.</p>
+    <ul>
+      <li>Pros: Gradual feature rollout, A/B testing, safer deployments.</li>
+      <li>Cons: Increased complexity, potential performance overhead.</li>
+      <li>Use cases: Gradual feature rollout, phased experimentation, managing dependencies.</li>
+    </ul>
+
+    <p><img src="/assets/FeatureToggle.png" alt="Feature Toggle" class="align-center;" height="700px" width="400px" /></p>
+  </li>
+</ol>
+
+<h2 id="emerging-trends">Emerging Trends</h2>
+
+<p>As deployment strategies evolve, consider incorporating trends like continuous delivery, multi-cloud deployments, and infrastructure-as-code (IaC) for automation and infrastructure management.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Understanding different deployment patterns is crucial for DevOps and Architects to make informed decisions. Experimenting with these patterns and leveraging modern tools allows you to optimize your deployments and achieve your desired outcomes. Remember, the optimal pattern depends on your specific project context and goals. By employing the right deployment pattern and embracing technological advancements, you can ensure reliable, efficient, and secure deployments that support your application’s success.</p>
+
+<h2 id="additional-resources">Additional Resources</h2>
+
+<ul>
+  <li><a href="https://itrevolution.com/product/the-devops-handbook-second-edition/">The DevOps Handbook:</a> How to Create World-Class Agility, Reliability, and Security in Technology Organizations by Gene Kim, Patrick Debois, John Willis, and Jez Humble</li>
+  <li><strong>Google Cloud Architecture Center:</strong> <a href="https://cloud.google.com/architecture/application-deployment-and-testing-strategies">Application deployment and testing strategies</a></li>
+  <li><a href="https://docs.aws.amazon.com/whitepapers/latest/practicing-continuous-integration-continuous-delivery/deployment-methods.html">Practicing Continuous Integration and Continuous Delivery on AWS</a></li>
+</ul>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2024-02-20T17:40:28+02:00">February 20, 2024</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Modern+Deployment+Patterns%20https%3A%2F%2Fstamak.github.io%2F2024%2F02%2F20%2Fdeployment-patterns.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fstamak.github.io%2F2024%2F02%2F20%2Fdeployment-patterns.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fstamak.github.io%2F2024%2F02%2F20%2Fdeployment-patterns.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2024/01/11/amd64-on-arm64.html" class="pagination--pager" title="amd64/x86_64 containers on Apple Silicon (arm64) overview
+">Previous</a>
+    
+    
+      <a href="/2024/03/05/reverse-port-fwd.html" class="pagination--pager" title="Reverse Port Forwarding
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 DevOps Notes. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-26K9QK19YL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-26K9QK19YL', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

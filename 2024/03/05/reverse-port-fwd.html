@@ -1,0 +1,543 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Reverse Port Forwarding - DevOps Notes</title>
+<meta name="description" content="Connecting from a Kubernetes to a Service running on your local machine">
+
+
+  <meta name="author" content="Stanislav Makar">
+  
+  <meta property="article:author" content="Stanislav Makar">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="DevOps Notes">
+<meta property="og:title" content="Reverse Port Forwarding">
+<meta property="og:url" content="https://stamak.github.io/2024/03/05/reverse-port-fwd.html">
+
+
+  <meta property="og:description" content="Connecting from a Kubernetes to a Service running on your local machine">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2024-03-05T18:24:34+02:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://stamak.github.io/2024/03/05/reverse-port-fwd.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://stamak.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="DevOps Notes Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          DevOps Notes
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/bio-photo.png" alt="Stanislav Makar" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Stanislav Makar</h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Lviv, Ukraine</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="https://github.com/stamak" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/stanislav-makar" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Reverse Port Forwarding">
+    <meta itemprop="description" content="Connecting from a Kubernetes to a Service running on your local machine">
+    <meta itemprop="datePublished" content="2024-03-05T18:24:34+02:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Reverse Port Forwarding
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h1 id="connecting-from-a-kubernetes-to-a-service-running-on-your-local-machine">Connecting from a Kubernetes to a Service running on your local machine</h1>
+
+<h2 id="introduction">Introduction</h2>
+<p>Sometimes you need to connect from a service running in a Kubernetes cluster to a service running on your local machine. This can be useful for debugging, testing, or development purposes. In this article, we’ll explore how to set up reverse port forwarding to enable this kind of connection.</p>
+
+<h2 id="high-level-architecture">High-Level Architecture</h2>
+<p><img src="/assets/RvrsPortFwd.png" alt="aReverse Port Forwarding" height="1700px" width="700px" />
+As shown in the diagram, the service running in the Kubernetes cluster needs to connect to a service running on your local machine.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">kubectl port-forward</code> command is used to forward a local port <code class="language-plaintext highlighter-rouge">8022</code> to the ssh server pod port <code class="language-plaintext highlighter-rouge">22</code> running in the Kubernetes cluster.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">ssh -R</code> command is used to let us forward the remote port <code class="language-plaintext highlighter-rouge">50080</code> from the ssh server pod to the local machine port <code class="language-plaintext highlighter-rouge">8080</code>.</p>
+
+<p>The kubernetes service <code class="language-plaintext highlighter-rouge">fwd-to-local-dev</code> is used to expose the ssh server pod port <code class="language-plaintext highlighter-rouge">50080</code> as port <code class="language-plaintext highlighter-rouge">8080</code> to all services running on the Kubernetes cluster and the test pod as well.</p>
+
+<p>For testing purposes, a simple <code class="language-plaintext highlighter-rouge">netcat</code> is used to listen on a port <code class="language-plaintext highlighter-rouge">8080</code> on the local machine, and a test pod is used to connect to this service with <code class="language-plaintext highlighter-rouge">netcat</code> client through the reverse port forwarding tunnel.</p>
+
+<h2 id="kubernetes-resources-congifurations">Kubernetes Resources Congifurations</h2>
+<p>Preapare the following configurations to deploy the resources in the Kubernetes cluster.</p>
+
+<p>Create a directory to store the configurations</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">mkdir </span>k8s-manifests
+<span class="nb">cd </span>k8s-manifests</code></pre></figure>
+
+<hr />
+<p>Pod Configuration</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">Alpine Linux</code> is used as a base image for the ssh server pod.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/name: fwd-to-local-dev
+  name: reverse-port-forward
+spec:
+  containers:
+    - name: alpine-ssh-server
+      image: alpine:3.19
+      command: ["sh", "-c", "apk add openssh-server;
+        ssh-keygen -A;
+        echo 'PermitRootLogin yes' &gt;&gt; /etc/ssh/sshd_config;
+        sed -i -e 's/AllowTcpForwarding</span><span class="se">\ </span><span class="sh">no/AllowTcpForwarding</span><span class="se">\ </span><span class="sh">yes/g' /etc/ssh/sshd_config;
+        sed -i -e 's/GatewayPorts</span><span class="se">\ </span><span class="sh">no/GatewayPorts</span><span class="se">\ </span><span class="sh">yes/g' /etc/ssh/sshd_config;
+        echo 'root:dummy_passwd'|chpasswd;
+        /usr/sbin/sshd -D -e"]
+      ports:
+        - containerPort: 50080
+          name: rvrs-prt-fwd
+          protocol: TCP
+EOF</span></code></pre></figure>
+
+<hr />
+<p>Service Configuration</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; svc.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: fwd-to-local-dev
+spec:
+  selector:
+    app.kubernetes.io/name: fwd-to-local-dev
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 50080
+EOF</span></code></pre></figure>
+
+<hr />
+<p>Test pod configuration</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; test-pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/name: test-pod
+  name: test-pod
+spec:
+  containers:
+    - name: test-pod
+      image: alpine:3.19
+      command: ["sh", "-c", "apk add netcat-openbsd;
+        while true; do sleep 1; done"]
+EOF</span></code></pre></figure>
+
+<hr />
+<p>Deploy the resources</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">stamak@terminal1:~/k8s-manifests<span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-la</span>
+total 12
+drwxr-xr-x   5 stamak staff  160 бер  6 18:03 <span class="nb">.</span>
+drwxr-x---+ 97 stamak staff 3104 бер  6 18:01 ..
+<span class="nt">-rw-r--r--</span>   1 stamak staff  677 бер  6 18:02 pod.yml
+<span class="nt">-rw-r--r--</span>   1 stamak staff  197 бер  6 18:02 svc.yml
+<span class="nt">-rw-r--r--</span>   1 stamak staff  251 бер  6 18:03 test-pod.yml
+stamak@terminal1:~/k8s-manifests<span class="nv">$ </span>kubectl apply <span class="nt">-f</span> <span class="nb">.</span>
+pod/reverse-port-forward created
+service/fwd-to-local-dev created
+pod/test-pod created</code></pre></figure>
+
+<hr />
+<h2 id="setting-up-the-reverse-port-forwarding">Setting up the Reverse Port Forwarding</h2>
+<p>To set up the reverse port forwarding, you need to run the following command on your local machine:</p>
+
+<p><strong>[Terminal 1]</strong> Forward the local port 8022 to the ssh server pod</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">kubectl port-forward pod/reverse-port-forward 8022:22</code></pre></figure>
+
+<hr />
+
+<p><strong>[Terminal 2]</strong> Start locally service listening on port or <code class="language-plaintext highlighter-rouge">netcat</code> in my case</p>
+
+<p><em>NOTE</em>: <code class="language-plaintext highlighter-rouge">8080</code> port is port where my netcat service is listening on.
+Just skip this step if you already have a service running on your local machine.
+Please do not forget to replace the port number in the next step with the port your service is listening on.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">nc <span class="nt">-l</span> 8080</code></pre></figure>
+
+<hr />
+
+<p><strong>[Terminal 3]</strong> Open a reverse ssh tunnel to the ssh server pod</p>
+
+<p><em>NOTE</em>: <code class="language-plaintext highlighter-rouge">8080</code> port is port where your local service is listening on.
+You can replace it with the port your service is listening on.</p>
+
+<p><em>NOTE</em>: Password: <code class="language-plaintext highlighter-rouge">dummy_passwd</code></p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">ssh <span class="nt">-R</span> 50080:localhost:8080 root@localhost <span class="nt">-p</span> 8022 <span class="nt">-oStrictHostKeyChecking</span><span class="o">=</span>no <span class="nt">-oUserKnownHostsFile</span><span class="o">=</span>/dev/null</code></pre></figure>
+
+<hr />
+
+<p><strong>[Terminal 4]</strong> Testing the Connection</p>
+
+<p>To test the connection, you can run the following command in the test pod:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">kubectl <span class="nb">exec</span> <span class="nt">-it</span> test-pod <span class="nt">--</span> sh
+/ <span class="c"># nc fwd-to-local-dev 8080</span></code></pre></figure>
+
+<hr />
+
+<h2 id="screen-shot">Screen Shot</h2>
+<p><img src="/assets/RvrsPortFwdScreen2.png" alt="ScreenShot" height="1700px" width="700px" /></p>
+
+<h2 id="additional-resources">Additional Resources</h2>
+<ul>
+  <li><a href="https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/">Kubernetes Port Forwarding</a></li>
+  <li><a href="https://www.ssh.com/academy/ssh/tunneling-example#remote-forwarding">SSH Remote Forwarding</a></li>
+  <li><a href="https://www.tecmint.com/netcat-nc-command-examples/">Netcat</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2024-03-05T18:24:34+02:00">March 5, 2024</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Reverse+Port+Forwarding%20https%3A%2F%2Fstamak.github.io%2F2024%2F03%2F05%2Freverse-port-fwd.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fstamak.github.io%2F2024%2F03%2F05%2Freverse-port-fwd.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fstamak.github.io%2F2024%2F03%2F05%2Freverse-port-fwd.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2024/02/20/deployment-patterns.html" class="pagination--pager" title="Modern Deployment Patterns
+">Previous</a>
+    
+    
+      <a href="/2024/04/30/k3s.html" class="pagination--pager" title="Taming the Edge with Kubernetes
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 DevOps Notes. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-26K9QK19YL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-26K9QK19YL', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+
+  </body>
+</html>
