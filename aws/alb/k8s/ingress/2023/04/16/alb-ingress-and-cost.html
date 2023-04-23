@@ -9,25 +9,24 @@
   <head>
     <meta charset="utf-8">
 
-<!-- begin _includes/seo.html --><title>DevOps Notes</title>
-<meta name="description" content="This is DevOps notes, helpful notes about DevOps stuff such as Clouds(AWS, GCP), Infrastructure as Code (IaC), Kubernetes">
+<!-- begin _includes/seo.html --><title>ALB Ingress Controller and Cost Optimization - DevOps Notes</title>
+<meta name="description" content="As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly, roughly one ALB costs ~$24 + extra per GB of processed data monthly.">
 
 
   <meta name="author" content="Stanislav Makar">
   
+  <meta property="article:author" content="Stanislav Makar">
+  
 
 
-<meta property="og:type" content="website">
+<meta property="og:type" content="article">
 <meta property="og:locale" content="en_US">
 <meta property="og:site_name" content="DevOps Notes">
-<meta property="og:title" content="DevOps Notes">
-<meta property="og:url" content="https://stamak.github.io/">
+<meta property="og:title" content="ALB Ingress Controller and Cost Optimization">
+<meta property="og:url" content="https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost.html">
 
 
-  <meta property="og:description" content="This is DevOps notes, helpful notes about DevOps stuff such as Clouds(AWS, GCP), Infrastructure as Code (IaC), Kubernetes">
-
-
-
+  <meta property="og:description" content="As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly, roughly one ALB costs ~$24 + extra per GB of processed data monthly.">
 
 
 
@@ -35,9 +34,14 @@
 
 
 
+  <meta property="article:published_time" content="2023-04-16T23:40:28+03:00">
 
 
-<link rel="canonical" href="https://stamak.github.io/">
+
+
+
+
+<link rel="canonical" href="https://stamak.github.io/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost.html">
 
 
 
@@ -88,7 +92,7 @@
 
   </head>
 
-  <body class="layout--home">
+  <body class="layout--single">
     <nav class="skip-links">
   <ul>
     <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
@@ -244,194 +248,18 @@
 
 
 
-  <div class="archive">
-    
-      <h1 id="page-title" class="page__title"></h1>
-    
-    
-
-
-<h3 class="archive__subtitle">Recent Posts</h3>
-
-
-
-
-<div class="entries-list">
-  
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="ALB Ingress Controller and Cost Optimization">
+    <meta itemprop="description" content="As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly,roughly one ALB costs ~$24 + extra per GB of processed data monthly.">
+    <meta itemprop="datePublished" content="2023-04-16T23:40:28+03:00">
     
 
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
+    <div class="page__inner-wrap">
       
-        <a href="/2024/04/30/k3s.html" rel="permalink">Taming the Edge with Kubernetes
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-
-    
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-clock" aria-hidden="true"></i>
-        
-          4 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Unleash the power of containerization at the edge with K3s!
-</p>
-  </article>
-</div>
-
-  
-    
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2024/03/05/reverse-port-fwd.html" rel="permalink">Reverse Port Forwarding
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-
-    
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-clock" aria-hidden="true"></i>
-        
-          3 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Connecting from a Kubernetes to a Service running on your local machine
-</p>
-  </article>
-</div>
-
-  
-    
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2024/02/20/deployment-patterns.html" rel="permalink">Modern Deployment Patterns
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-
-    
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-clock" aria-hidden="true"></i>
-        
-          2 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">A Guide to Modern Deployment Patterns
-</p>
-  </article>
-</div>
-
-  
-    
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2024/01/11/amd64-on-arm64.html" rel="permalink">amd64/x86_64 containers on Apple Silicon (arm64) overview
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-
-    
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-clock" aria-hidden="true"></i>
-        
-          1 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Introduction
-</p>
-  </article>
-</div>
-
-  
-    
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2023/04/28/alb-ingress-advanced-routing.html" rel="permalink">AWS ALB Ingress Advanced Request Routing
-</a>
-      
-    </h2>
-    
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">ALB Ingress Controller and Cost Optimization
+</h1>
+          
 
   <p class="page__meta">
     
@@ -452,99 +280,77 @@
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">AWS Application Load Balancer allows traffic to be routed based on HTTP header, HTTP request method,
-query string, source IP, in addition host and path-based...</p>
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly,
+roughly one ALB costs ~$24 + extra per GB of processed data monthly.</p>
+
+<p>In order to save money there is a possibility to have use <code class="language-plaintext highlighter-rouge">One</code> ALB for all your k8s ingress resources.
+To acheave it one extra annotations should be added to all your ingress resources should have common annotaion:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">  annotations:
+    alb.ingress.kubernetes.io/group.name: shared-ingress</code></pre></figure>
+
+<p>Output for all ingress resources:</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nv">$ </span>kubectl get ing <span class="nt">-A</span>
+NAMESPACE     NAME          CLASS  HOSTS                             ADDRESS                                                    PORTS    AGE
+default     ingress-1        alb    ingress-1.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h
+namespace2  ingress-2        alb    ingress-2.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h
+ns3         ingress-3        alb    ingress-3.example.com      k8s-sharedingress-dbc951d-472698.eu-central-1.elb.amazonaws.com   80      5d4h</code></pre></figure>
+
+<p>For more details visit <a href="https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/ingress/annotations/#group.name">official docs</a>.</p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2023-04-16T23:40:28+03:00">April 16, 2023</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=ALB+Ingress+Controller+and+Cost+Optimization%20https%3A%2F%2Fstamak.github.io%2Faws%2Falb%2Fk8s%2Fingress%2F2023%2F04%2F16%2Falb-ingress-and-cost.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fstamak.github.io%2Faws%2Falb%2Fk8s%2Fingress%2F2023%2F04%2F16%2Falb-ingress-and-cost.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fstamak.github.io%2Faws%2Falb%2Fk8s%2Fingress%2F2023%2F04%2F16%2Falb-ingress-and-cost.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="#" class="pagination--pager disabled">Previous</a>
+    
+    
+      <a href="/2023/04/26/rds-access.html" class="pagination--pager" title="RDS access via kubernetes as jump host
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
   </article>
-</div>
 
   
-    
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2023/04/26/rds-access.html" rel="permalink">RDS access via kubernetes as jump host
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-
-    
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-clock" aria-hidden="true"></i>
-        
-          less than 1 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Sometimes there is a need to connect to RDS in private VPC subnet having an access to EKS.
-It can be achieved with help of socket container deployed on top o...</p>
-  </article>
-</div>
-
-  
-    
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/aws/alb/k8s/ingress/2023/04/16/alb-ingress-and-cost.html" rel="permalink">ALB Ingress Controller and Cost Optimization
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-
-    
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-clock" aria-hidden="true"></i>
-        
-          less than 1 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">As we know ALB Ingress Controller creates Load Balancer per k8s ingress resource by default and it’s costly,
-roughly one ALB costs ~$24 + extra per GB of pro...</p>
-  </article>
-</div>
-
   
 </div>
 
-
-
-
-  </div>
-</div>
     </div>
 
     
