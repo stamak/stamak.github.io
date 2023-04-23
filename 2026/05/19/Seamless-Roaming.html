@@ -1,0 +1,543 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Seamless Roaming Across 2.4GHz and 5GHz - DevOps Notes</title>
+<meta name="description" content="Configuring the Roaming Trinity (802.11k/v/r) on OpenWrt &amp; Asus RT-AX53U">
+
+
+  <meta name="author" content="Stanislav Makar">
+  
+  <meta property="article:author" content="Stanislav Makar">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="DevOps Notes">
+<meta property="og:title" content="Seamless Roaming Across 2.4GHz and 5GHz">
+<meta property="og:url" content="https://stamak.github.io/2026/05/19/Seamless-Roaming.html">
+
+
+  <meta property="og:description" content="Configuring the Roaming Trinity (802.11k/v/r) on OpenWrt &amp; Asus RT-AX53U">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2026-05-19T12:00:35+03:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://stamak.github.io/2026/05/19/Seamless-Roaming.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://stamak.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="DevOps Notes Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          DevOps Notes
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/bio-photo.png" alt="Stanislav Makar" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Stanislav Makar</h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">Lviv, Ukraine</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="https://github.com/stamak" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/stanislav-makar" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Seamless Roaming Across 2.4GHz and 5GHz">
+    <meta itemprop="description" content="Configuring the Roaming Trinity (802.11k/v/r) on OpenWrt &amp; Asus RT-AX53U">
+    <meta itemprop="datePublished" content="2026-05-19T12:00:35+03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Seamless Roaming Across 2.4GHz and 5GHz
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h2 id="the-problem-the-concrete-wall-dilemma">The Problem: The Concrete Wall Dilemma</h2>
+
+<p>We’ve all been there: you invest in a modern wireless setup, expecting flawless gigabit speeds everywhere. But then reality hits—specifically, a solid concrete wall reinforced with metal rebar.</p>
+
+<p>While 5GHz Wi-Fi offers incredible bandwidth, its short wavelengths struggle immensely to penetrate dense materials like concrete and metal. As soon as you step behind that wall, your 5GHz signal plummets, leaving you with a dead zone or a frozen connection. This is exactly where the 2.4GHz band comes back into the game. With its longer wavelengths, 2.4GHz easily cuts through structural obstacles to maintain coverage.</p>
+
+<p>Fortunately, <a href="https://en.wikipedia.org/wiki/Wi-Fi_6">Wi-Fi 6 (802.11ax)</a> isn’t just for 5GHz; it brings massive efficiency improvements—like OFDMA and better power management—to the 2.4GHz band as well. To get the best of both worlds, you need a setup that handles <strong>almost seamless switching</strong> between the high-speed 5GHz band and the wall-piercing 2.4GHz band on a single, unified SSID.</p>
+
+<p>If you are running <a href="https://openwrt.org">OpenWrt</a> on a capable Wi-Fi 6 router like the <a href="https://openwrt.org/toh/hwdata/asus/asus_rt-ax53u">Asus RT-AX53U</a>, you can achieve exactly that by deploying the “Holy Trinity” of wireless roaming: <strong>802.11k, 802.11v, and 802.11r</strong>.</p>
+
+<hr />
+
+<h2 id="the-roaming-trinity-how-11k-11v-and-11r-work-together">The Roaming Trinity: How 11k, 11v, and 11r Work Together</h2>
+
+<p>To understand why your switching feels seamless, you need to understand the distinct job each protocol performs. Think of them as a team managing your device’s journey from 5GHz to 2.4GHz:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[802.11k: The Mapmaker] --&gt; [802.11v: The Traffic Cop] --&gt; [802.11r: The Fast Pass]
+</code></pre></div></div>
+
+<h3 id="1-80211k-neighbor-reports--the-mapmaker">1. <a href="https://en.wikipedia.org/wiki/IEEE_802.11k-2008">802.11k</a> (Neighbor Reports) — The Mapmaker</h3>
+
+<p>Without <em>802.11k</em>, your phone has to blindly scan the airwaves to find another radio, which drains the battery. 802.11k provides a “neighbor report,” telling the phone: <em>“Hey, I have a 2.4GHz radio right here on Channel 6.”</em></p>
+
+<h3 id="2-80211v-bss-transition-management--the-traffic-cop">2. <a href="https://en.wikipedia.org/wiki/IEEE_802.11v-2011">802.11v</a> (BSS Transition Management) — The Traffic Cop</h3>
+
+<p>This <em>802.11v</em> protocol allows the router to actively manage the network. If your 5GHz signal is dying, the router can “steer” the client by saying: <em>“Your 5GHz connection is dropping. I recommend you switch to the 2.4GHz band now.”</em></p>
+
+<h3 id="3-80211r-fast-transition--the-fast-pass">3. <a href="https://en.wikipedia.org/wiki/IEEE_802.11r-2008">802.11r</a> (Fast Transition) — The Fast Pass</h3>
+
+<p>This handles the muscle work. It allows the client to pre-authenticate with the 2.4GHz radio <em>before</em> dropping the 5GHz link, slashing the handoff time to a sub-50ms window.</p>
+
+<hr />
+
+<h2 id="real-world-proof-the-apple-ecosystem-advantage">Real-World Proof: The Apple Ecosystem Advantage</h2>
+
+<p>Apple devices like the <strong>iPhone</strong> and <strong>MacBook</strong> are notoriously strict about enterprise wireless specifications. According to <a href="https://support.apple.com/en-us/102766">Apple’s official support documentation</a>, iOS, iPadOS, and macOS use 802.11k, 802.11v, and 802.11r to optimize roaming and determine which “Target BSSID” is the best candidate for the next connection.</p>
+
+<p>By following the configuration below, your OpenWrt router will speak the exact “language” Apple devices expect for optimized roaming:</p>
+
+<ul>
+  <li><strong>iPhones</strong> will trigger an 802.11v transition request the moment the signal hits the -70 dBm threshold.</li>
+  <li><strong>MacBooks</strong> will use the neighbor reports to maintain a stable connection while moving between rooms without interrupting your workflow.</li>
+</ul>
+
+<p>Apple hardware is highly intelligent when it comes to band selection. They don’t just look at which signal is louder; they actively monitor data rates and signal-to-noise ratios. As a result, when you step out from behind that concrete wall, the client automatically and seamlessly hops back to the 5GHz band on its own to prioritize maximum throughput.</p>
+
+<p><em>(Note: While Apple gear has been thoroughly tested and confirmed to rock this setup flawlessly, ecosystems like Android, Windows, and proprietary IoT smart-home clients haven’t been validated on this specific node yet. Your mileage may vary, though modern stacks should behave similarly.)</em></p>
+
+<hr />
+
+<h2 id="pre-requisites">Pre-Requisites</h2>
+
+<p>Ensure you have the full wireless daemon installed. The default <code class="language-plaintext highlighter-rouge">wpad-basic</code> in OpenWrt does not support advanced roaming.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>opkg update
+opkg remove wpad-basic-mbedtls wpad-basic-wolfssl
+opkg <span class="nb">install </span>wpad-openssl
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="the-production-blueprint-etcconfigwireless">The Production Blueprint: <code class="language-plaintext highlighter-rouge">/etc/config/wireless</code></h2>
+
+<p>To activate this suite, both the 2.4GHz (<code class="language-plaintext highlighter-rouge">radio0</code>) and 5GHz (<code class="language-plaintext highlighter-rouge">radio1</code>) interfaces must share the same <strong>SSID</strong>, <strong>Encryption</strong>, and <strong>Mobility Domain</strong>.</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>config wifi-iface 'default_radio0'
+	option device 'radio0'
+	option network 'lan'
+	option mode 'ap'
+	option ssid 'TheSameSSID'
+	option key 'YourPassWord'
+	option encryption 'sae'
+	option sae_pwe '2'
+	option ocv '0'
+	option log_level '1'
+	option ieee80211r '1'
+	option mobility_domain 'eaea'
+	option bss_transition '1'
+	option wnm_sleep_mode '1'
+	option ieee80211k '1'
+	option disassoc_low_ack '0'
+	option ft_over_ds '0'
+	option time_advertisement '2'
+	option proxy_arp '1'
+
+config wifi-iface 'default_radio1'
+	option device 'radio1'
+	option network 'lan'
+	option mode 'ap'
+	option ssid 'TheSameSSID'
+	option key 'YourPassWord'
+	option encryption 'sae'
+	option sae_pwe '2'
+	option ocv '0'
+	option log_level '1'
+	option ieee80211r '1'
+	option mobility_domain 'eaea'
+	option bss_transition '1'
+	option wnm_sleep_mode '1'
+	option ieee80211k '1'
+	option disassoc_low_ack '0'
+	option ft_over_ds '0'
+	option time_advertisement '2'
+	option proxy_arp '1'
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="deconstructing-the-configuration">Deconstructing the Configuration</h2>
+
+<ul>
+  <li><strong><code class="language-plaintext highlighter-rouge">option ieee80211k '1'</code> &amp; <code class="language-plaintext highlighter-rouge">option bss_transition '1'</code></strong>: Maps to 802.11k and 802.11v. They handle network discovery and band steering suggestions.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">option ieee80211r '1'</code> &amp; <code class="language-plaintext highlighter-rouge">option mobility_domain 'eaea'</code></strong>: Activates Fast Transition. The 4-character hex code (<code class="language-plaintext highlighter-rouge">eaea</code>) tells your devices that both frequencies belong to the exact same roaming group.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">option ft_over_ds '0'</code></strong>: Sets the transmission mode to <strong>Over-the-Air</strong>. For cross-band roaming on a single AP node, Over-the-Air is cleaner and widely supported by mobile operating systems.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">option encryption 'sae'</code> &amp; <code class="language-plaintext highlighter-rouge">option sae_pwe '2'</code></strong>: Enforces pure WPA3 with <em>Hash-to-Element (H2E)</em> protection—a requirement for true Wi-Fi 6 operation that accelerates security handshakes on modern hardware.</li>
+</ul>
+
+<hr />
+
+<h2 id="verifying-the-setup-analyzing-the-logs">Verifying the Setup: Analyzing the Logs</h2>
+
+<p>Apply your changes with <code class="language-plaintext highlighter-rouge">wifi reload</code>. SSH into your Asus router and track the events in real-time as you walk past your structural obstacles:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>logread <span class="nt">-f</span> | <span class="nb">grep </span>hostapd
+</code></pre></div></div>
+
+<p>When your device successfully switches bands, you will see a rapid sequence of events that look exactly like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Mon May 18 22:22:57 2026 daemon.err hostapd: nl80211: kernel reports: key addition failed
+Mon May 18 22:22:57 2026 daemon.info hostapd: phy0-ap0: STA 22:33:be:77:33:cc IEEE 802.11: associated <span class="o">(</span>aid 5<span class="o">)</span>
+Mon May 18 22:22:57 2026 daemon.notice hostapd: phy0-ap0: AP-STA-CONNECTED 22:33:be:77:33:cc <span class="nv">auth_alg</span><span class="o">=</span>ft
+Mon May 18 22:22:57 2026 daemon.notice hostapd: phy1-ap0: Prune association <span class="k">for </span>22:33:be:77:33:cc
+Mon May 18 22:22:57 2026 daemon.notice hostapd: phy1-ap0: AP-STA-DISCONNECTED 22:33:be:77:33:cc
+</code></pre></div></div>
+
+<h3 id="breaking-down-the-output">Breaking Down the Output:</h3>
+
+<ol>
+  <li><strong><code class="language-plaintext highlighter-rouge">auth_alg=ft</code></strong>: Confirms the client authenticated using <strong>Fast Transition (802.11r)</strong> instead of a standard handshake. The transition happened within the exact same millisecond timestamp (<code class="language-plaintext highlighter-rouge">22:22:57</code>).</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">Prune association</code></strong>: The target radio interface (<code class="language-plaintext highlighter-rouge">phy0-ap0</code>) tells the old radio interface (<code class="language-plaintext highlighter-rouge">phy1-ap0</code>) to drop the connection record immediately because the station has successfully moved.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">kernel reports: key addition failed</code></strong>: Don’t panic if you see this error. It is a benign, well-known behavior with MediaTek drivers in OpenWrt when handling complex WPA3/FT keys. The framework attempts to overwrite a cryptographic key structure that the driver hardware engine has already mapped. Roaming functions perfectly despite the warning.</li>
+</ol>
+
+<p>By uniting 802.11k, v, and r on OpenWrt, you’ve built an intelligent, context-aware roaming matrix that keeps even the most demanding Apple devices happy.</p>
+
+<h3 id="additional-resources">Additional Resources</h3>
+
+<ul>
+  <li><a href="https://openwrt.org/docs/guide-user/network/wifi/roaming">Wifi Roaming</a></li>
+</ul>
+
+<hr />
+
+<p><em>This article was written with the assistance of Generative AI.</em></p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2026-05-19T12:00:35+03:00">May 19, 2026</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Seamless+Roaming+Across+2.4GHz+and+5GHz%20https%3A%2F%2Fstamak.github.io%2F2026%2F05%2F19%2FSeamless-Roaming.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fstamak.github.io%2F2026%2F05%2F19%2FSeamless-Roaming.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fstamak.github.io%2F2026%2F05%2F19%2FSeamless-Roaming.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2025/09/21/CloudRunAndHelm.html" class="pagination--pager" title="Scaling Up: Why Your Cloud Run Deployments Need Helm
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2026 DevOps Notes. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-26K9QK19YL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-26K9QK19YL', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+
+  </body>
+</html>
